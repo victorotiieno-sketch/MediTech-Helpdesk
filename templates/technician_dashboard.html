@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Technician Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+
+        <div class="user-profile">
+
+            <div class="profile-avatar">
+                {{ full_name[0]|upper }}
+            </div>
+
+            <div>
+                <strong>{{ full_name }}</strong>
+                <span>{{ role }}</span>
+            </div>
+
+        </div>
+
+        <a href="{{ url_for('logout') }}">
+            Logout
+        </a>
+
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-section">
+
+            <span class="sidebar-label">
+                WORKSPACE
+            </span>
+
+            <nav>
+
+                <a
+                    href="{{ url_for('technician_dashboard') }}"
+                    class="active"
+                >
+                    <span class="nav-icon">▦</span>
+                    My Dashboard
+                </a>
+
+                <a href="{{ url_for('tickets') }}">
+                    <span class="nav-icon">▤</span>
+                    All Tickets
+                </a>
+
+                <a href="{{ url_for('create_ticket') }}">
+                    <span class="nav-icon">＋</span>
+                    Create Ticket
+                </a>
+
+            </nav>
+
+        </div>
+
+        <div class="sidebar-footer">
+
+            <div class="sidebar-status">
+                <span></span>
+                System Online
+            </div>
+
+            <div class="technician-department">
+                <strong>Department</strong>
+                <p>{{ department }}</p>
+            </div>
+
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="technician-welcome">
+
+            <div>
+
+                <span class="page-kicker">
+                    TECHNICIAN PORTAL
+                </span>
+
+                <h2>
+                    Welcome back, {{ full_name.split()[0] }}
+                </h2>
+
+                <p>
+                    Here is an overview of your current ICT support workload.
+                </p>
+
+            </div>
+
+            <div class="dashboard-date">
+                <span>Department</span>
+                <strong>{{ department }}</strong>
+            </div>
+
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+        <section class="technician-stats">
+
+            <div class="technician-stat">
+
+                <div class="stat-symbol">
+                    T
+                </div>
+
+                <div class="stat-content">
+
+                    <span>Total Assigned</span>
+
+                    <strong>
+                        {{ total_assigned }}
+                    </strong>
+
+                    <small>
+                        All assigned tickets
+                    </small>
+
+                </div>
+
+            </div>
+
+            <div class="technician-stat">
+
+                <div class="stat-symbol">
+                    O
+                </div>
+
+                <div class="stat-content">
+
+                    <span>Open</span>
+
+                    <strong>
+                        {{ assigned_open }}
+                    </strong>
+
+                    <small>
+                        Awaiting action
+                    </small>
+
+                </div>
+
+            </div>
+
+            <div class="technician-stat">
+
+                <div class="stat-symbol">
+                    P
+                </div>
+
+                <div class="stat-content">
+
+                    <span>In Progress</span>
+
+                    <strong>
+                        {{ assigned_progress }}
+                    </strong>
+
+                    <small>
+                        Currently working
+                    </small>
+
+                </div>
+
+            </div>
+
+            <div class="technician-stat">
+
+                <div class="stat-symbol">
+                    R
+                </div>
+
+                <div class="stat-content">
+
+                    <span>Resolved</span>
+
+                    <strong>
+                        {{ assigned_resolved }}
+                    </strong>
+
+                    <small>
+                        Completed tickets
+                    </small>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        {% if critical_tickets > 0 %}
+
+        <div class="critical-alert">
+
+            <div class="critical-content">
+
+                <div class="critical-icon">
+                    !
+                </div>
+
+                <div>
+
+                    <strong>
+                        Critical attention required
+                    </strong>
+
+                    <p>
+                        {{ critical_tickets }} critical ticket{% if critical_tickets != 1 %}s{% endif %}
+                        currently require{% if critical_tickets == 1 %}s{% endif %} your attention.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <a href="#my-tickets">
+                Review
+            </a>
+
+        </div>
+
+        {% endif %}
+
+        <section class="panel technician-ticket-panel" id="my-tickets">
+
+            <div class="panel-header technician-panel-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        WORK QUEUE
+                    </span>
+
+                    <h3>
+                        My Assigned Tickets
+                    </h3>
+
+                    <p>
+                        Support requests currently assigned to you.
+                    </p>
+
+                </div>
+
+                <div class="ticket-count">
+                    {{ total_assigned }} Ticket{% if total_assigned != 1 %}s{% endif %}
+                </div>
+
+            </div>
+
+            {% if my_tickets %}
+
+            <div class="technician-ticket-list">
+
+                {% for ticket in my_tickets %}
+
+                <div class="technician-ticket">
+
+                    <div class="ticket-main">
+
+                        <div class="ticket-number">
+                            #{{ ticket["id"] }}
+                        </div>
+
+                        <div class="ticket-information">
+
+                            <a
+                                href="{{ url_for('ticket_details', ticket_id=ticket['id']) }}"
+                                class="ticket-title"
+                            >
+                                {{ ticket["title"] }}
+                            </a>
+
+                            <p>
+                                {{ ticket["description"]|truncate(100) }}
+                            </p>
+
+                            <div class="ticket-meta">
+
+                                <span>
+                                    {{ ticket["department"] }}
+                                </span>
+
+                                <span>
+                                    {{ ticket["category"] }}
+                                </span>
+
+                                <span>
+                                    Created by {{ ticket["creator_name"] }}
+                                </span>
+
+                                <span>
+                                    {{ ticket["created_at"] }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="ticket-right">
+
+                        <span class="badge priority-{{ ticket['priority']|lower }}">
+                            {{ ticket["priority"] }}
+                        </span>
+
+                        <span class="badge status-{{ ticket['status']|lower|replace(' ', '-') }}">
+                            {{ ticket["status"] }}
+                        </span>
+
+                        <a
+                            href="{{ url_for('ticket_details', ticket_id=ticket['id']) }}"
+                            class="ticket-open-button"
+                        >
+                            Open Ticket
+                            <span>→</span>
+                        </a>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% else %}
+
+            <div class="technician-empty">
+
+                <div class="empty-icon">
+                    ✓
+                </div>
+
+                <h4>
+                    No tickets assigned
+                </h4>
+
+                <p>
+                    You currently have no assigned support requests.
+                </p>
+
+                <a
+                    href="{{ url_for('tickets') }}"
+                    class="secondary-button"
+                >
+                    View All Tickets
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

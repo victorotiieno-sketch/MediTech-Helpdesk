@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Asset Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</header>
+
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            <a href="{{ url_for('systems_directory') }}">Systems Directory</a>
+            <a href="{{ url_for('assets') }}" {% if request.endpoint in ['assets', 'create_asset', 'asset_details', 'edit_asset', 'update_asset_status'] %}class="active"{% endif %}>Asset Manager</a>
+
+            {% if role == "Administrator" %}
+                <a href="{{ url_for('configuration') }}">Configuration</a>
+                <a href="{{ url_for('admin_panel') }}">Administration</a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+</body>
+</html>

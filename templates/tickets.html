@@ -1,0 +1,338 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Tickets</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}" class="active">View Tickets</a>
+
+            {% if role == "Administrator" %}
+                <a href="{{ url_for('admin_panel') }}">Administration</a>
+            {% endif %}
+        </nav>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+
+            <div>
+                <span>ICT SUPPORT</span>
+                <h2>Tickets</h2>
+                <p>Search and manage hospital ICT support requests.</p>
+            </div>
+
+            <a href="{{ url_for('create_ticket') }}" class="primary-button">
+                + Create Ticket
+            </a>
+
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel">
+
+            <div class="filter-header">
+                <div>
+                    <h3>Search & Filter Tickets</h3>
+                    <p>Use one or more filters to find specific support requests.</p>
+                </div>
+
+                <div class="ticket-result-count">
+                    {{ ticket_count }} ticket{% if ticket_count != 1 %}s{% endif %} found
+                </div>
+            </div>
+
+            <form method="GET" class="advanced-filter-form">
+
+                <div class="filter-field search-field">
+                    <label for="search">Search</label>
+
+                    <input
+                        id="search"
+                        type="text"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="ID, title, description or category"
+                    >
+                </div>
+
+                <div class="filter-field">
+                    <label for="status">Status</label>
+
+                    <select id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="Open" {% if selected_status == "Open" %}selected{% endif %}>Open</option>
+                        <option value="Assigned" {% if selected_status == "Assigned" %}selected{% endif %}>Assigned</option>
+                        <option value="In Progress" {% if selected_status == "In Progress" %}selected{% endif %}>In Progress</option>
+                        <option value="Pending" {% if selected_status == "Pending" %}selected{% endif %}>Pending</option>
+                        <option value="Resolved" {% if selected_status == "Resolved" %}selected{% endif %}>Resolved</option>
+                        <option value="Closed" {% if selected_status == "Closed" %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label for="priority">Priority</label>
+
+                    <select id="priority" name="priority">
+                        <option value="">All Priorities</option>
+                        <option value="Low" {% if selected_priority == "Low" %}selected{% endif %}>Low</option>
+                        <option value="Medium" {% if selected_priority == "Medium" %}selected{% endif %}>Medium</option>
+                        <option value="High" {% if selected_priority == "High" %}selected{% endif %}>High</option>
+                        <option value="Critical" {% if selected_priority == "Critical" %}selected{% endif %}>Critical</option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label for="department">Department</label>
+
+                    <select id="department" name="department">
+                        <option value="">All Departments</option>
+
+                        {% for department in departments %}
+                            <option
+                                value="{{ department['name'] }}"
+                                {% if selected_department == department['name'] %}selected{% endif %}
+                            >
+                                {{ department["name"] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label for="category">Category</label>
+
+                    <select id="category" name="category">
+                        <option value="">All Categories</option>
+
+                        {% for item in categories %}
+                            <option
+                                value="{{ item['category'] }}"
+                                {% if selected_category == item['category'] %}selected{% endif %}
+                            >
+                                {{ item["category"] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label for="technician">Technician</label>
+
+                    <select id="technician" name="technician">
+                        <option value="">All Technicians</option>
+
+                        <option
+                            value="unassigned"
+                            {% if selected_technician == "unassigned" %}selected{% endif %}
+                        >
+                            Unassigned
+                        </option>
+
+                        {% for technician in technicians %}
+                            <option
+                                value="{{ technician['id'] }}"
+                                {% if selected_technician == technician['id']|string %}selected{% endif %}
+                            >
+                                {{ technician["full_name"] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+
+                    <button type="submit" class="primary-button">
+                        Search
+                    </button>
+
+                    <a href="{{ url_for('tickets') }}" class="secondary-button">
+                        Clear Filters
+                    </a>
+
+                </div>
+
+            </form>
+
+            {% if tickets %}
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Issue</th>
+                                <th>Department</th>
+                                <th>Category</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Age</th>
+                                <th>SLA</th>
+                                <th>Technician</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for ticket in tickets %}
+
+                            <tr>
+
+                                <td>
+                                    <strong>#{{ ticket["id"] }}</strong>
+                                </td>
+
+                                <td>
+                                    <strong>{{ ticket["title"] }}</strong>
+                                </td>
+
+                                <td>
+                                    {{ ticket["department"] }}
+                                </td>
+
+                                <td>
+                                    {{ ticket["category"] }}
+                                </td>
+
+                                <td>
+                                    <span class="badge priority-{{ ticket['priority']|lower }}">
+                                        {{ ticket["priority"] }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="badge status-{{ ticket['status']|lower|replace(' ', '-') }}">
+                                        {{ ticket["status"] }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="sla-age">
+                                        {{ ticket["sla"]["age_text"] }}
+                                    </div>
+                                    <small class="sla-target">
+                                        Target: {{ ticket["sla"]["target_hours"] }}h
+                                    </small>
+                                </td>
+
+                                <td>
+                                    <span class="sla-badge sla-{{ ticket["sla"]["sla_status"]|lower|replace(' ', '-') }}">
+                                        {{ ticket["sla"]["sla_status"] }}
+                                    </span>
+
+                                    {% if ticket["sla"]["sla_status"] == "On Track" %}
+                                        <small class="sla-remaining">
+                                            {{ ticket["sla"]["remaining_hours"] }}h remaining
+                                        </small>
+                                    {% elif ticket["sla"]["sla_status"] == "At Risk" %}
+                                        <small class="sla-remaining">
+                                            {{ ticket["sla"]["remaining_hours"] }}h remaining
+                                        </small>
+                                    {% elif ticket["sla"]["sla_status"] == "Overdue" %}
+                                        <small class="sla-remaining">
+                                            {{ (-ticket["sla"]["remaining_hours"])|round(2) }}h overdue
+                                        </small>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if ticket["technician_name"] %}
+                                        {{ ticket["technician_name"] }}
+                                    {% else %}
+                                        <span class="unassigned">Unassigned</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <a
+                                        class="view-link"
+                                        href="{{ url_for('ticket_details', ticket_id=ticket['id']) }}"
+                                    >
+                                        View
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">T</div>
+
+                    <h4>No tickets found</h4>
+
+                    <p>
+                        No tickets match your current search and filter settings.
+                    </p>
+
+                    <a href="{{ url_for('tickets') }}" class="secondary-button">
+                        Clear Filters
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

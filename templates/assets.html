@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Asset Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            <a href="{{ url_for('assets') }}" class="active">Asset Manager</a>
+
+            {% if role == "Administrator" %}
+                <a href="{{ url_for('admin_panel') }}">Administration</a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+            <div>
+                <span>ASSET MANAGEMENT</span>
+                <h2>ICT Asset Manager</h2>
+                <p>Manage hospital ICT equipment and assigned assets.</p>
+            </div>
+
+            {% if role == "Administrator" %}
+                <a href="{{ url_for('create_asset') }}" class="primary-button">
+                    + Register Asset
+                </a>
+            {% endif %}
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="asset-summary-grid">
+
+            <div class="asset-summary-card">
+                <span>Total Assets</span>
+                <strong>{{ total_assets }}</strong>
+            </div>
+
+            <div class="asset-summary-card">
+                <span>Active</span>
+                <strong>{{ active_assets }}</strong>
+            </div>
+
+            <div class="asset-summary-card">
+                <span>Under Repair</span>
+                <strong>{{ repair_assets }}</strong>
+            </div>
+
+            <div class="asset-summary-card">
+                <span>Retired</span>
+                <strong>{{ retired_assets }}</strong>
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="filter-header">
+                <div>
+                    <h3>Asset Inventory</h3>
+                    <p>Search and filter registered hospital equipment.</p>
+                </div>
+
+                <span class="asset-count">
+                    {{ assets|length }} Showing
+                </span>
+            </div>
+
+            <form method="GET" class="advanced-filter-form">
+
+                <div class="form-group">
+                    <label for="search">Search</label>
+                    <input
+                        type="text"
+                        id="search"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="Asset tag, name, serial number..."
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="Active" {% if selected_status == "Active" %}selected{% endif %}>
+                            Active
+                        </option>
+                        <option value="Repair" {% if selected_status == "Repair" %}selected{% endif %}>
+                            Repair
+                        </option>
+                        <option value="Retired" {% if selected_status == "Retired" %}selected{% endif %}>
+                            Retired
+                        </option>
+                        <option value="Lost" {% if selected_status == "Lost" %}selected{% endif %}>
+                            Lost
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <select id="department" name="department">
+                        <option value="">All Departments</option>
+
+                        {% for department_item in departments %}
+                            <option
+                                value="{{ department_item['name'] }}"
+                                {% if selected_department == department_item['name'] %}selected{% endif %}
+                            >
+                                {{ department_item['name'] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="equipment_type">Equipment Type</label>
+                    <select id="equipment_type" name="equipment_type">
+                        <option value="">All Types</option>
+
+                        {% for equipment in equipment_types %}
+                            <option
+                                value="{{ equipment['equipment_type'] }}"
+                                {% if selected_equipment_type == equipment['equipment_type'] %}selected{% endif %}
+                            >
+                                {{ equipment['equipment_type'] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="primary-button">
+                        Apply Filters
+                    </button>
+
+                    <a href="{{ url_for('assets') }}" class="secondary-button">
+                        Clear
+                    </a>
+                </div>
+
+            </form>
+
+        </section>
+
+        <section class="panel asset-table-panel">
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Asset</th>
+                            <th>Equipment</th>
+                            <th>Serial Number</th>
+                            <th>Department</th>
+                            <th>Assigned To</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for asset in assets %}
+
+                            <tr>
+
+                                <td>
+                                    <strong>{{ asset["asset_tag"] }}</strong>
+                                    <span class="asset-name">
+                                        {{ asset["name"] }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {{ asset["equipment_type"] }}
+                                    {% if asset["manufacturer"] %}
+                                        <span class="asset-meta">
+                                            {{ asset["manufacturer"] }}
+                                            {% if asset["model"] %}
+                                                {{ asset["model"] }}
+                                            {% endif %}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ asset["serial_number"] or "?" }}
+                                </td>
+
+                                <td>
+                                    {{ asset["department"] or "?" }}
+                                </td>
+
+                                <td>
+                                    {{ asset["assigned_name"] or "Unassigned" }}
+                                </td>
+
+                                <td>
+                                    {{ asset["location"] or "?" }}
+                                </td>
+
+                                <td>
+                                    <span class="asset-status asset-status-{{ asset['status']|lower }}">
+                                        {{ asset["status"] }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{{ url_for('asset_details', asset_id=asset['id']) }}"
+                                        class="table-action"
+                                    >
+                                        View
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    No assets found.
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            <a href="{{ url_for('admin_panel') }}">Administration</a>
+            <a href="{{ url_for('reports') }}" class="active">Reports</a>
+        </nav>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+
+            <div>
+                <span>ICT MANAGEMENT</span>
+                <h2>Ticket Reports</h2>
+                <p>Analyze hospital ICT support activity and ticket performance.</p>
+            </div>
+
+            <button type="button" class="primary-button" onclick="window.print()">
+                Print Report
+            </button>
+
+        </div>
+
+        <section class="panel">
+
+            <div class="filter-header">
+                <div>
+                    <h3>Report Filters</h3>
+                    <p>Select the criteria you want to include in the report.</p>
+                </div>
+
+                <div class="ticket-result-count">
+                    {{ total_tickets }} ticket{% if total_tickets != 1 %}s{% endif %}
+                </div>
+            </div>
+
+            <form method="GET" class="report-filter-form">
+
+                <div class="filter-field">
+                    <label for="date_from">From Date</label>
+                    <input
+                        id="date_from"
+                        type="date"
+                        name="date_from"
+                        value="{{ date_from }}"
+                    >
+                </div>
+
+                <div class="filter-field">
+                    <label for="date_to">To Date</label>
+                    <input
+                        id="date_to"
+                        type="date"
+                        name="date_to"
+                        value="{{ date_to }}"
+                    >
+                </div>
+
+                <div class="filter-field">
+                    <label for="status">Status</label>
+
+                    <select id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="Open" {% if selected_status == "Open" %}selected{% endif %}>Open</option>
+                        <option value="Assigned" {% if selected_status == "Assigned" %}selected{% endif %}>Assigned</option>
+                        <option value="In Progress" {% if selected_status == "In Progress" %}selected{% endif %}>In Progress</option>
+                        <option value="Pending" {% if selected_status == "Pending" %}selected{% endif %}>Pending</option>
+                        <option value="Resolved" {% if selected_status == "Resolved" %}selected{% endif %}>Resolved</option>
+                        <option value="Closed" {% if selected_status == "Closed" %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label for="priority">Priority</label>
+
+                    <select id="priority" name="priority">
+                        <option value="">All Priorities</option>
+                        <option value="Low" {% if selected_priority == "Low" %}selected{% endif %}>Low</option>
+                        <option value="Medium" {% if selected_priority == "Medium" %}selected{% endif %}>Medium</option>
+                        <option value="High" {% if selected_priority == "High" %}selected{% endif %}>High</option>
+                        <option value="Critical" {% if selected_priority == "Critical" %}selected{% endif %}>Critical</option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label for="department">Department</label>
+
+                    <select id="department" name="department">
+                        <option value="">All Departments</option>
+
+                        {% for department in departments %}
+                            <option
+                                value="{{ department['name'] }}"
+                                {% if selected_department == department['name'] %}selected{% endif %}
+                            >
+                                {{ department["name"] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+
+                    <button type="submit" class="primary-button">
+                        Generate Report
+                    </button>
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        onclick="exportReport()"
+                    >
+                        Export CSV
+                    </button>
+
+                    <a href="{{ url_for('reports') }}" class="secondary-button">
+                        Clear Filters
+                    </a>
+
+                </div>
+
+            </form>
+
+        </section>
+
+        <section class="analytics-grid report-summary-grid">
+
+            <div class="analytics-card">
+                <span>Total Tickets</span>
+                <strong>{{ total_tickets }}</strong>
+                <small>Matching selected filters</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>Open</span>
+                <strong>{{ open_tickets }}</strong>
+                <small>Awaiting assignment</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>In Progress</span>
+                <strong>{{ in_progress_tickets }}</strong>
+                <small>Currently being worked on</small>
+            </div>
+
+            <div class="analytics-card critical-card">
+                <span>Critical</span>
+                <strong>{{ critical_tickets }}</strong>
+                <small>Unresolved critical tickets</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>Assigned</span>
+                <strong>{{ assigned_tickets }}</strong>
+                <small>Assigned to technicians</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>Pending</span>
+                <strong>{{ pending_tickets }}</strong>
+                <small>Waiting for action</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>Resolved</span>
+                <strong>{{ resolved_tickets }}</strong>
+                <small>Successfully resolved</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>Closed</span>
+                <strong>{{ closed_tickets }}</strong>
+                <small>Completed tickets</small>
+            </div>
+
+        </section>
+
+        <section class="panel sla-report-panel">
+
+            <div class="filter-header">
+                <div>
+                    <h3>SLA Performance</h3>
+                    <p>Service-level performance for tickets matching the selected filters.</p>
+                </div>
+
+                <div class="sla-total">
+                    {{ total_tickets }} Total Tickets
+                </div>
+            </div>
+
+            <div class="sla-summary-grid">
+
+                <div class="sla-summary-card sla-card-track">
+                    <div class="sla-summary-icon">?</div>
+                    <div>
+                        <span>On Track</span>
+                        <strong>{{ sla_counts["On Track"] }}</strong>
+                    </div>
+                </div>
+
+                <div class="sla-summary-card sla-card-risk">
+                    <div class="sla-summary-icon">!</div>
+                    <div>
+                        <span>At Risk</span>
+                        <strong>{{ sla_counts["At Risk"] }}</strong>
+                    </div>
+                </div>
+
+                <div class="sla-summary-card sla-card-overdue">
+                    <div class="sla-summary-icon">!</div>
+                    <div>
+                        <span>Overdue</span>
+                        <strong>{{ sla_counts["Overdue"] }}</strong>
+                    </div>
+                </div>
+
+                <div class="sla-summary-card sla-card-completed">
+                    <div class="sla-summary-icon">?</div>
+                    <div>
+                        <span>Completed</span>
+                        <strong>{{ sla_counts["Completed"] }}</strong>
+                    </div>
+                </div>
+
+                <div class="sla-summary-card sla-card-critical">
+                    <div class="sla-summary-icon">!</div>
+                    <div>
+                        <span>Critical Overdue</span>
+                        <strong>{{ critical_overdue }}</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="filter-header">
+                <div>
+                    <h3>Ticket Report</h3>
+                    <p>Detailed ticket records matching the selected criteria.</p>
+                </div>
+            </div>
+
+            {% if tickets %}
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Issue</th>
+                                <th>Department</th>
+                                <th>Category</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Age</th>
+                                <th>SLA</th>
+                                <th>Technician</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for ticket in tickets %}
+
+                            <tr>
+
+                                <td>
+                                    <strong>#{{ ticket["id"] }}</strong>
+                                </td>
+
+                                <td>
+                                    <strong>{{ ticket["title"] }}</strong>
+                                </td>
+
+                                <td>
+                                    {{ ticket["department"] }}
+                                </td>
+
+                                <td>
+                                    {{ ticket["category"] }}
+                                </td>
+
+                                <td>
+                                    <span class="badge priority-{{ ticket['priority']|lower }}">
+                                        {{ ticket["priority"] }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="badge status-{{ ticket['status']|lower|replace(' ', '-') }}">
+                                        {{ ticket["status"] }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="sla-age">
+                                        {{ ticket["sla"]["age_text"] }}
+                                    </div>
+
+                                    <small class="sla-target">
+                                        Target: {{ ticket["sla"]["target_hours"] }}h
+                                    </small>
+                                </td>
+
+                                <td>
+                                    <span class="sla-badge sla-{{ ticket["sla"]["sla_status"]|lower|replace(' ', '-') }}">
+                                        {{ ticket["sla"]["sla_status"] }}
+                                    </span>
+
+                                    {% if ticket["sla"]["sla_status"] == "On Track" %}
+                                        <small class="sla-remaining">
+                                            {{ ticket["sla"]["remaining_hours"] }}h remaining
+                                        </small>
+                                    {% elif ticket["sla"]["sla_status"] == "At Risk" %}
+                                        <small class="sla-remaining">
+                                            {{ ticket["sla"]["remaining_hours"] }}h remaining
+                                        </small>
+                                    {% elif ticket["sla"]["sla_status"] == "Overdue" %}
+                                        <small class="sla-remaining">
+                                            {{ (-ticket["sla"]["remaining_hours"])|round(2) }}h overdue
+                                        </small>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if ticket["technician_name"] %}
+                                        {{ ticket["technician_name"] }}
+                                    {% else %}
+                                        <span class="unassigned">Unassigned</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ ticket["created_at"] }}
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">R</div>
+
+                    <h4>No report data</h4>
+
+                    <p>
+                        No tickets match the selected report filters.
+                    </p>
+
+                    <a href="{{ url_for('reports') }}" class="secondary-button">
+                        Clear Filters
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+function exportReport() {
+    const form = document.querySelector(".report-filter-form");
+    const params = new URLSearchParams(new FormData(form));
+    window.location.href = "{{ url_for('export_report') }}?" + params.toString();
+}
+</script>
+
+</body>
+</html>

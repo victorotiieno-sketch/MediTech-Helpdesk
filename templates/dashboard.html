@@ -1,0 +1,206 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav>
+            <a href="{{ url_for('dashboard') }}" class="active">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            <a href="{{ url_for('assets') }}">Asset Manager</a>
+            <a href="{{ url_for('notifications') }}">Notifications</a>
+            {% if role == 'Administrator' %}
+                <a href="{{ url_for('configuration') }}">Configuration</a>
+                <a href="{{ url_for('admin_panel') }}">Administration</a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-bottom">
+            <span>ICT SUPPORT SYSTEM</span>
+            <p>Version 1.0</p>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+            <div>
+                <span>ICT SUPPORT PORTAL</span>
+                <h2>Dashboard</h2>
+                <p>Monitor and manage hospital ICT support requests.</p>
+            </div>
+
+            <div class="header-actions">
+                <a href="{{ url_for('create_ticket') }}" class="primary-button">+ Create Ticket</a>
+                <a href="{{ url_for('notifications') }}" class="secondary-button">Notifications</a>
+            </div>
+        </div>
+
+        <section class="overview-hero">
+            <div>
+                <span>Welcome back</span>
+                <h3>{{ full_name }}</h3>
+                <p>Here is the current status of your hospital ICT support operations.</p>
+            </div>
+            <div class="info-badges">
+                <span>{{ role }}</span>
+                <span>{{ departments }} departments</span>
+            </div>
+        </section>
+
+        <section class="statistics">
+
+            <div class="stat-card">
+                <div class="stat-icon">T</div>
+                <div>
+                    <span>Total Tickets</span>
+                    <strong>{{ total }}</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">O</div>
+                <div>
+                    <span>Open Tickets</span>
+                    <strong>{{ open_tickets }}</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">P</div>
+                <div>
+                    <span>In Progress</span>
+                    <strong>{{ in_progress }}</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">R</div>
+                <div>
+                    <span>Resolved</span>
+                    <strong>{{ resolved }}</strong>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="dashboard-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h3>Recent Tickets</h3>
+                        <p>Latest ICT support requests</p>
+                    </div>
+                    <a href="{{ url_for('tickets') }}">View All</a>
+                </div>
+
+                {% if recent_tickets %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in recent_tickets %}
+                                    <tr>
+                                        <td>#{{ ticket["id"] }}</td>
+                                        <td><strong>{{ ticket["title"] }}</strong></td>
+                                        <td>{{ ticket["category"] }}</td>
+                                        <td>
+                                            <span class="badge priority-{{ ticket['priority']|lower }}">{{ ticket["priority"] }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge status-{{ ticket['status']|lower|replace(' ', '-') }}">{{ ticket["status"] }}</span>
+                                        </td>
+                                        <td>
+                                            <a class="view-link" href="{{ url_for('ticket_details', ticket_id=ticket['id']) }}">View</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">T</div>
+                        <h4>No tickets yet</h4>
+                        <p>Create a ticket when an ICT issue needs to be reported.</p>
+                        <a href="{{ url_for('create_ticket') }}" class="primary-button">Create Ticket</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="panel quick-panel">
+                <div class="panel-header">
+                    <div>
+                        <h3>Quick Actions</h3>
+                        <p>Common support tasks</p>
+                    </div>
+                </div>
+
+                <div class="quick-action-grid">
+                    <a href="{{ url_for('create_ticket') }}" class="quick-action-card">
+                        <strong>Create Ticket</strong>
+                        <span>Report a new issue</span>
+                    </a>
+                    <a href="{{ url_for('tickets') }}" class="quick-action-card">
+                        <strong>View Tickets</strong>
+                        <span>Track existing requests</span>
+                    </a>
+                    <a href="{{ url_for('notifications') }}" class="quick-action-card">
+                        <strong>Notifications</strong>
+                        <span>Latest updates</span>
+                    </a>
+                    {% if role == 'Administrator' %}
+                        <a href="{{ url_for('admin_panel') }}" class="quick-action-card">
+                            <strong>Administration</strong>
+                            <span>Manage technicians</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

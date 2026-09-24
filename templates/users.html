@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | User Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+
+        <a href="{{ url_for('logout') }}">Logout</a>
+
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav>
+
+            <a href="{{ url_for('dashboard') }}">
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('create_ticket') }}">
+                Create Ticket
+            </a>
+
+            <a href="{{ url_for('tickets') }}">
+                View Tickets
+            </a>
+
+            <a href="{{ url_for('admin_panel') }}">
+                Administration
+            </a>
+
+            <a href="{{ url_for('user_management') }}" class="active">
+                User Management
+            </a>
+
+        </nav>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+
+            <div>
+                <span>ADMINISTRATION</span>
+                <h2>User Management</h2>
+                <p>Manage hospital ICT help desk accounts and access.</p>
+            </div>
+
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <h3>Create User Account</h3>
+                    <p>Add an administrator, ICT technician, or staff account.</p>
+                </div>
+
+            </div>
+
+            <form
+                method="POST"
+                action="{{ url_for('add_user') }}"
+            >
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="full_name">
+                            Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="full_name"
+                            name="full_name"
+                            placeholder="e.g. Jane Otieno"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="username">
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="e.g. jane.staff"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Create password"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="role">
+                            Role
+                        </label>
+
+                        <select id="role" name="role" required>
+
+                            <option value="">
+                                Select role
+                            </option>
+
+                            <option value="Staff">
+                                Staff
+                            </option>
+
+                            <option value="ICT Technician">
+                                ICT Technician
+                            </option>
+
+                            <option value="Administrator">
+                                Administrator
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="department">
+                            Department
+                        </label>
+
+                        <select id="department" name="department">
+
+                            <option value="ICT">
+                                ICT
+                            </option>
+
+                            <option value="Emergency">
+                                Emergency
+                            </option>
+
+                            <option value="Outpatient">
+                                Outpatient
+                            </option>
+
+                            <option value="Laboratory">
+                                Laboratory
+                            </option>
+
+                            <option value="Pharmacy">
+                                Pharmacy
+                            </option>
+
+                            <option value="Radiology">
+                                Radiology
+                            </option>
+
+                            <option value="Finance">
+                                Finance
+                            </option>
+
+                            <option value="Human Resources">
+                                Human Resources
+                            </option>
+
+                            <option value="Medical Records">
+                                Medical Records
+                            </option>
+
+                            <option value="Nursing">
+                                Nursing
+                            </option>
+
+                            <option value="Administration">
+                                Administration
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <button type="submit" class="primary-button">
+                    Create User
+                </button>
+
+            </form>
+
+        </section>
+
+        <section class="panel admin-table-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <h3>System Accounts</h3>
+                    <p>All registered users and their access status.</p>
+                </div>
+
+            </div>
+
+            {% if users %}
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Department</th>
+                            <th>Tickets</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for user in users %}
+
+                        <tr>
+
+                            <td>
+                                #{{ user["id"] }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ user["full_name"] }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ user["username"] }}
+                            </td>
+
+                            <td>
+                                <span class="role-badge">
+                                    {{ user["role"] }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ user["department"] }}
+                            </td>
+
+                            <td>
+                                {{ user["ticket_count"] }}
+                            </td>
+
+                            <td>
+
+                                {% if user["active"] == 1 %}
+
+                                    <span class="account-active">
+                                        Active
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="account-inactive">
+                                        Inactive
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if user["id"] == session["user_id"] %}
+
+                                    <span class="current-user">
+                                        Current account
+                                    </span>
+
+                                {% else %}
+
+                                    <div class="user-actions">
+
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for('toggle_user', user_id=user['id']) }}"
+                                        >
+
+                                            <button
+                                                type="submit"
+                                                class="small-button"
+                                            >
+                                                {% if user["active"] == 1 %}
+                                                    Deactivate
+                                                {% else %}
+                                                    Activate
+                                                {% endif %}
+                                            </button>
+
+                                        </form>
+
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for('delete_user', user_id=user['id']) }}"
+                                            onsubmit="return confirm('Delete this user account?');"
+                                        >
+
+                                            <button
+                                                type="submit"
+                                                class="small-danger-button"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    U
+                </div>
+
+                <h4>No users found</h4>
+
+                <p>
+                    Create a user account using the form above.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

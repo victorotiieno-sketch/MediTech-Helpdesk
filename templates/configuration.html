@@ -1,0 +1,147 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+<div class="page-heading">
+    <div>
+        <h1>Configuration</h1>
+        <p>Manage hospital IT service desk settings and reference data.</p>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="config-card config-unified-panel">
+    <div class="config-card-header">
+        <div>
+            <h2>Configuration Manager</h2>
+            <p>Manage all hospital IT reference data from one table.</p>
+        </div>
+        <span class="config-count">{{ facilities|length + priorities|length + categories|length + issue_types|length + equipment_types|length }} records</span>
+    </div>
+
+    <div class="config-add-grid">
+        <form method="POST" action="{{ url_for('add_facility') }}" class="config-form">
+            <strong>Add Facility</strong>
+            <input type="text" name="name" placeholder="Facility name" required>
+            <input type="text" name="location" placeholder="Location">
+            <input type="text" name="contact" placeholder="Contact">
+            <button type="submit" class="primary-button">Add</button>
+        </form>
+
+        <form method="POST" action="{{ url_for('add_priority') }}" class="config-form">
+            <strong>Add Priority</strong>
+            <input type="text" name="name" placeholder="Priority name" required>
+            <input type="number" name="sla_hours" placeholder="SLA hours" min="1" required>
+            <button type="submit" class="primary-button">Add</button>
+        </form>
+
+        <form method="POST" action="{{ url_for('add_category') }}" class="config-form">
+            <strong>Add Category</strong>
+            <input type="text" name="name" placeholder="Category name" required>
+            <input type="text" name="description" placeholder="Description">
+            <button type="submit" class="primary-button">Add</button>
+        </form>
+
+        <form method="POST" action="{{ url_for('add_issue_type') }}" class="config-form">
+            <strong>Add Issue Type</strong>
+            <input type="text" name="name" placeholder="Issue type" required>
+            <input type="text" name="category" placeholder="Category">
+            <input type="text" name="description" placeholder="Description">
+            <button type="submit" class="primary-button">Add</button>
+        </form>
+
+        <form method="POST" action="{{ url_for('add_equipment_type') }}" class="config-form">
+            <strong>Add Equipment Type</strong>
+            <input type="text" name="name" placeholder="Equipment type" required>
+            <input type="text" name="description" placeholder="Description">
+            <button type="submit" class="primary-button">Add</button>
+        </form>
+    </div>
+
+    <div class="config-table-wrap">
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Details</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in facilities %}
+                <tr>
+                    <td><span class="config-type">Facility</span></td>
+                    <td><strong>{{ item["name"] }}</strong></td>
+                    <td>{{ item["location"] or "—" }}{% if item["contact"] %}<span class="config-detail">{{ item["contact"] }}</span>{% endif %}</td>
+                    <td><span class="status-badge {% if item['active'] %}status-active{% else %}status-inactive{% endif %}">{{ "Active" if item["active"] else "Inactive" }}</span></td>
+                    <td class="config-actions">
+                        <form method="POST" action="{{ url_for('toggle_facility', facility_id=item['id']) }}" class="inline-form"><button type="submit" class="secondary-button">{{ "Disable" if item['active'] else "Enable" }}</button></form>
+                        <form method="POST" action="{{ url_for('delete_facility', facility_id=item['id']) }}" class="inline-form" onsubmit="return confirm('Delete this facility?');"><button type="submit" class="danger-button">Delete</button></form>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                {% for item in priorities %}
+                <tr>
+                    <td><span class="config-type">Priority</span></td>
+                    <td><strong>{{ item["name"] }}</strong></td>
+                    <td>{{ item["sla_hours"] }} hrs SLA</td>
+                    <td><span class="status-badge {% if item['active'] %}status-active{% else %}status-inactive{% endif %}">{{ "Active" if item["active"] else "Inactive" }}</span></td>
+                    <td class="config-actions">
+                        <form method="POST" action="{{ url_for('toggle_priority', priority_id=item['id']) }}" class="inline-form"><button type="submit" class="secondary-button">{{ "Disable" if item['active'] else "Enable" }}</button></form>
+                        <form method="POST" action="{{ url_for('delete_priority', priority_id=item['id']) }}" class="inline-form" onsubmit="return confirm('Delete this priority?');"><button type="submit" class="danger-button">Delete</button></form>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                {% for item in categories %}
+                <tr>
+                    <td><span class="config-type">Category</span></td>
+                    <td><strong>{{ item["name"] }}</strong></td>
+                    <td>{{ item["description"] or "—" }}</td>
+                    <td><span class="status-badge {% if item['active'] %}status-active{% else %}status-inactive{% endif %}">{{ "Active" if item["active"] else "Inactive" }}</span></td>
+                    <td class="config-actions">
+                        <form method="POST" action="{{ url_for('toggle_category', category_id=item['id']) }}" class="inline-form"><button type="submit" class="secondary-button">{{ "Disable" if item['active'] else "Enable" }}</button></form>
+                        <form method="POST" action="{{ url_for('delete_category', category_id=item['id']) }}" class="inline-form" onsubmit="return confirm('Delete this category?');"><button type="submit" class="danger-button">Delete</button></form>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                {% for item in issue_types %}
+                <tr>
+                    <td><span class="config-type">Issue Type</span></td>
+                    <td><strong>{{ item["name"] }}</strong></td>
+                    <td>{{ item["category"] or "—" }}{% if item["description"] %}<span class="config-detail">{{ item["description"] }}</span>{% endif %}</td>
+                    <td><span class="status-badge {% if item['active'] %}status-active{% else %}status-inactive{% endif %}">{{ "Active" if item["active"] else "Inactive" }}</span></td>
+                    <td class="config-actions">
+                        <form method="POST" action="{{ url_for('toggle_issue_type', issue_type_id=item['id']) }}" class="inline-form"><button type="submit" class="secondary-button">{{ "Disable" if item['active'] else "Enable" }}</button></form>
+                        <form method="POST" action="{{ url_for('delete_issue_type', issue_type_id=item['id']) }}" class="inline-form" onsubmit="return confirm('Delete this issue type?');"><button type="submit" class="danger-button">Delete</button></form>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                {% for item in equipment_types %}
+                <tr>
+                    <td><span class="config-type">Equipment</span></td>
+                    <td><strong>{{ item["name"] }}</strong></td>
+                    <td>{{ item["description"] or "—" }}</td>
+                    <td><span class="status-badge {% if item['active'] %}status-active{% else %}status-inactive{% endif %}">{{ "Active" if item["active"] else "Inactive" }}</span></td>
+                    <td class="config-actions">
+                        <form method="POST" action="{{ url_for('toggle_equipment_type', equipment_type_id=item['id']) }}" class="inline-form"><button type="submit" class="secondary-button">{{ "Disable" if item['active'] else "Enable" }}</button></form>
+                        <form method="POST" action="{{ url_for('delete_equipment_type', equipment_type_id=item['id']) }}" class="inline-form" onsubmit="return confirm('Delete this equipment type?');"><button type="submit" class="danger-button">Delete</button></form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

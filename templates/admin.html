@@ -1,0 +1,356 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Administration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+
+        <a href="{{ url_for('logout') }}">Logout</a>
+
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav>
+
+            <a href="{{ url_for('dashboard') }}">
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('create_ticket') }}">
+                Create Ticket
+            </a>
+
+            <a href="{{ url_for('tickets') }}">
+                View Tickets
+            </a>
+
+            <a href="{{ url_for('admin_panel') }}" class="active">
+                Administration
+            </a>
+
+            <a href="{{ url_for('configuration') }}">
+                Configuration
+            </a>
+
+            <a href="{{ url_for('reports') }}">
+                Reports
+            </a>
+
+            <a href="{{ url_for('technician_performance') }}">
+                Technician Performance
+            </a>
+
+            <a href="{{ url_for('user_management') }}">
+                User Management
+            </a>
+
+            <a href="{{ url_for('backup_database') }}">
+                Backup Database
+            </a>
+
+        </nav>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+
+            <div>
+                <span>SYSTEM MANAGEMENT</span>
+                <h2>Administration</h2>
+                <p>Manage ICT technicians and hospital departments.</p>
+            </div>
+
+            <div class="header-actions">
+                <a href="{{ url_for('user_management') }}" class="primary-button">
+                    Manage Users
+                </a>
+                <a href="{{ url_for('backup_database') }}" class="secondary-button">
+                    Backup Database
+                </a>
+            </div>
+
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+        <section class="admin-grid">
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h3>Add ICT Technician</h3>
+                        <p>Create an account for an ICT technician.</p>
+                    </div>
+
+                </div>
+
+                <form method="POST" action="{{ url_for('add_technician') }}">
+
+                    <div class="form-group">
+
+                        <label for="full_name">
+                            Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="full_name"
+                            name="full_name"
+                            placeholder="e.g. John Otieno"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="username">
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="e.g. john.ict"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Create password"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="department">
+                            Department
+                        </label>
+
+                        <select id="department" name="department">
+
+                            {% for department in departments %}
+
+                                <option value="{{ department['name'] }}">
+                                    {{ department["name"] }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <button type="submit" class="primary-button">
+                        Create Technician
+                    </button>
+
+                </form>
+
+            </div>
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h3>Add Department</h3>
+                        <p>Add a hospital department to the system.</p>
+                    </div>
+
+                </div>
+
+                <form method="POST" action="{{ url_for('add_department') }}">
+
+                    <div class="form-group">
+
+                        <label for="name">
+                            Department Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            placeholder="e.g. Dental Clinic"
+                            required
+                        >
+
+                    </div>
+
+                    <button type="submit" class="primary-button">
+                        Add Department
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
+
+        <section class="panel admin-table-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <h3>ICT Technicians</h3>
+                    <p>Technician accounts and current workload.</p>
+                </div>
+
+            </div>
+
+            {% if technicians %}
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Department</th>
+                            <th>Assigned Tickets</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for technician in technicians %}
+
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    {{ technician["full_name"] }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ technician["username"] }}
+                            </td>
+
+                            <td>
+                                {{ technician["department"] }}
+                            </td>
+
+                            <td>
+                                <span class="badge status-assigned">
+                                    {{ technician["ticket_count"] }}
+                                </span>
+                            </td>
+
+                            <td>
+
+                                {% if technician["active"] == 1 %}
+
+                                    <span class="account-active">
+                                        Active
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="account-inactive">
+                                        Inactive
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    U
+                </div>
+
+                <h4>No technicians yet</h4>
+
+                <p>
+                    Create an ICT technician account above.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

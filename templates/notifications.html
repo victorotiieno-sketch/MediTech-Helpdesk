@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - MediTech Hospital ICT Help Desk</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+            <div class="logo-icon">MT</div>
+            <div>
+                <h2>MediTech</h2>
+                <span>ICT Help Desk</span>
+            </div>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="user-avatar">
+                {{ full_name[0]|upper }}
+            </div>
+            <div>
+                <strong>{{ full_name }}</strong>
+                <span>{{ role }}</span>
+            </div>
+        </div>
+
+        <nav>
+            {% if role == "ICT Technician" %}
+            <a href="{{ url_for('technician_dashboard') }}">
+                <span class="nav-icon">D</span>
+                My Dashboard
+            </a>
+            {% else %}
+            <a href="{{ url_for('dashboard') }}">
+                <span class="nav-icon">D</span>
+                Dashboard
+            </a>
+            {% endif %}
+
+            <a href="{{ url_for('tickets') }}">
+                <span class="nav-icon">T</span>
+                All Tickets
+            </a>
+
+            <a href="{{ url_for('create_ticket') }}">
+                <span class="nav-icon">+</span>
+                Create Ticket
+            </a>
+
+            <a href="{{ url_for('notifications') }}" class="active">
+                <span class="nav-icon">!</span>
+                Notifications
+                {% set unread_count = notifications|selectattr('is_read', 'equalto', 0)|list|length %}
+                {% if unread_count > 0 %}
+                    <span class="notification-count">
+                        {{ unread_count }}
+                    </span>
+                {% endif %}
+            </a>
+
+            {% if role == "Administrator" %}
+            <a href="{{ url_for('admin_panel') }}">
+                <span class="nav-icon">A</span>
+                Administration
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}">
+                <span class="nav-icon">↪</span>
+                Logout
+            </a>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <h1>Notifications</h1>
+                <p>Stay updated on your help desk activities.</p>
+            </div>
+        </header>
+
+        <section class="content-section">
+
+            <div class="section-header">
+                <div>
+                    <h2>Notification Center</h2>
+                    <p>Recent updates and ticket assignments.</p>
+                </div>
+
+                {% if notifications %}
+                <form method="POST" action="{{ url_for('mark_all_notifications_read') }}">
+                    <button type="submit" class="btn btn-secondary">
+                        Mark All as Read
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if notifications %}
+
+                <div class="notifications-list">
+
+                    {% for notification in notifications %}
+
+                        <div class="notification-item {% if notification.is_read == 0 %}unread{% endif %}">
+
+                            <div class="notification-icon">
+                                {% if notification.notification_type == "ticket" %}
+                                    T
+                                {% else %}
+                                    !
+                                {% endif %}
+                            </div>
+
+                            <div class="notification-content">
+
+                                {% if notification.is_read == 0 %}
+                                <a
+                                    href="{% if notification.ticket_id %}{{ url_for('ticket_details', ticket_id=notification.ticket_id) }}{% else %}{{ url_for('notifications') }}{% endif %}"
+                                    class="notification-link"
+                                    onclick="markNotificationRead(event, {{ notification.id }}, {% if notification.ticket_id %}'{{ url_for('ticket_details', ticket_id=notification.ticket_id) }}'{% else %}'{{ url_for('notifications') }}'{% endif %})"
+                                >
+                                    <h3>{{ notification.title }}</h3>
+                                    <p>{{ notification.message }}</p>
+                                </a>
+                                {% else %}
+                                <div>
+                                    <h3>{{ notification.title }}</h3>
+                                    <p>{{ notification.message }}</p>
+                                </div>
+                                {% endif %}
+
+                                <span class="notification-time">
+                                    {{ notification.created_at }}
+                                </span>
+
+                            </div>
+
+                            {% if notification.is_read == 0 %}
+                            <div class="notification-status">
+                                <span>New</span>
+                            </div>
+                            {% endif %}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+                    <div class="empty-state-icon">!</div>
+                    <h3>No Notifications</h3>
+                    <p>You currently have no notifications.</p>
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+function markNotificationRead(event, notificationId, destination) {
+    event.preventDefault();
+
+    fetch("/notifications/" + notificationId + "/read", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+    })
+    .then(function() {
+        window.location.href = destination;
+    })
+    .catch(function() {
+        window.location.href = destination;
+    });
+}
+</script>
+
+</body>
+</html>
+

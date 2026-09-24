@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Register Asset</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            <a href="{{ url_for('assets') }}" class="active">Asset Manager</a>
+
+            {% if role == "Administrator" %}
+                <a href="{{ url_for('admin_panel') }}">Administration</a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+            <div>
+                <span>ASSET MANAGEMENT</span>
+                <h2>Register New Asset</h2>
+                <p>Add hospital ICT equipment to the asset inventory.</p>
+            </div>
+
+            <a href="{{ url_for('assets') }}" class="secondary-button">
+                Back to Assets
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel asset-form-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3>Asset Information</h3>
+                    <p>Enter the equipment details below.</p>
+                </div>
+            </div>
+
+            <form method="POST">
+
+                <div class="asset-form-section">
+
+                    <h4>Basic Information</h4>
+
+                    <div class="asset-form-grid">
+
+                        <div class="form-group">
+                            <label for="asset_tag">Asset Tag *</label>
+                            <input
+                                type="text"
+                                id="asset_tag"
+                                name="asset_tag"
+                                placeholder="e.g. AST-001"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Asset Name *</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                placeholder="e.g. Dell Latitude 5420"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="equipment_type">Equipment Type *</label>
+                            <select id="equipment_type" name="equipment_type" required>
+                                <option value="">Select equipment type</option>
+                                <option value="Laptop">Laptop</option>
+                                <option value="Desktop">Desktop</option>
+                                <option value="Monitor">Monitor</option>
+                                <option value="Printer">Printer</option>
+                                <option value="Scanner">Scanner</option>
+                                <option value="Router">Router</option>
+                                <option value="Switch">Network Switch</option>
+                                <option value="Server">Server</option>
+                                <option value="UPS">UPS</option>
+                                <option value="Projector">Projector</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="IP Phone">IP Phone</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">Asset Status</label>
+                            <select id="status" name="status">
+                                <option value="Active">Active</option>
+                                <option value="Repair">Repair</option>
+                                <option value="Retired">Retired</option>
+                                <option value="Lost">Lost</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-section">
+
+                    <h4>Hardware Details</h4>
+
+                    <div class="asset-form-grid">
+
+                        <div class="form-group">
+                            <label for="manufacturer">Manufacturer</label>
+                            <input
+                                type="text"
+                                id="manufacturer"
+                                name="manufacturer"
+                                placeholder="e.g. Dell"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="model">Model</label>
+                            <input
+                                type="text"
+                                id="model"
+                                name="model"
+                                placeholder="e.g. Latitude 5420"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="serial_number">Serial Number</label>
+                            <input
+                                type="text"
+                                id="serial_number"
+                                name="serial_number"
+                                placeholder="Enter serial number"
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-section">
+
+                    <h4>Assignment & Location</h4>
+
+                    <div class="asset-form-grid">
+
+                        <div class="form-group">
+                            <label for="department">Department</label>
+                            <select id="department" name="department">
+                                <option value="">Select department</option>
+
+                                {% for department in departments %}
+                                    <option value="{{ department['name'] }}">
+                                        {{ department['name'] }}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assigned_to">Assigned To</label>
+                            <select id="assigned_to" name="assigned_to">
+                                <option value="">Unassigned</option>
+
+                                {% for person in staff %}
+                                    <option value="{{ person['id'] }}">
+                                        {{ person['full_name'] }} ? {{ person['department'] or 'No Department' }}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Physical Location</label>
+                            <input
+                                type="text"
+                                id="location"
+                                name="location"
+                                placeholder="e.g. Finance Office"
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-section">
+
+                    <h4>Purchase & Warranty</h4>
+
+                    <div class="asset-form-grid">
+
+                        <div class="form-group">
+                            <label for="purchase_date">Purchase Date</label>
+                            <input
+                                type="date"
+                                id="purchase_date"
+                                name="purchase_date"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="warranty_expiry">Warranty Expiry</label>
+                            <input
+                                type="date"
+                                id="warranty_expiry"
+                                name="warranty_expiry"
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-section">
+
+                    <h4>Additional Notes</h4>
+
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea
+                            id="notes"
+                            name="notes"
+                            rows="5"
+                            placeholder="Add any additional asset information..."
+                        ></textarea>
+                    </div>
+
+                </div>
+
+                <div class="asset-form-actions">
+
+                    <a href="{{ url_for('assets') }}" class="secondary-button">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="primary-button">
+                        Register Asset
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

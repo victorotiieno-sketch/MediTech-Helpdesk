@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Ticket #{{ ticket["id"] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}" class="active">View Tickets</a>
+
+            {% if role == "Administrator" %}
+                <a href="{{ url_for('admin_panel') }}">Administration</a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+            <div>
+                <span>TICKET #{{ ticket["id"] }}</span>
+                <h2>{{ ticket["title"] }}</h2>
+                <p>ICT support request details.</p>
+            </div>
+
+            <a href="{{ url_for('tickets') }}" class="secondary-button">
+                Back to Tickets
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="details-grid">
+
+            <div>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3>Ticket Information</h3>
+                            <p>Reported issue</p>
+                        </div>
+                    </div>
+
+                    <div class="ticket-info">
+
+                        <div>
+                            <span>Issue Title</span>
+                            <strong>{{ ticket["title"] }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Department</span>
+                            <strong>{{ ticket["department"] }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Category</span>
+                            <strong>{{ ticket["category"] }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Priority</span>
+                            <strong>{{ ticket["priority"] }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Created By</span>
+                            <strong>{{ ticket["creator_name"] }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Assigned Technician</span>
+                            <strong>
+                                {% if ticket["technician_name"] %}
+                                    {{ ticket["technician_name"] }}
+                                {% else %}
+                                    Unassigned
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Date Created</span>
+                            <strong>{{ ticket["created_at"] }}</strong>
+                        </div>
+
+                    </div>
+
+                    <div class="description-box">
+                        <span>Description</span>
+                        <p>{{ ticket["description"] }}</p>
+                    </div>
+                </section>
+
+                <section class="panel ticket-sla-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h3>SLA & Ticket Aging</h3>
+                            <p>Service-level monitoring for this ticket.</p>
+                        </div>
+
+                        <span class="sla-badge sla-{{ sla["sla_status"]|lower|replace(' ', '-') }}">
+                            {{ sla["sla_status"] }}
+                        </span>
+                    </div>
+
+                    <div class="sla-detail-grid">
+
+                        <div class="sla-detail-card">
+                            <span>Ticket Age</span>
+                            <strong>{{ sla["age_text"] }}</strong>
+                        </div>
+
+                        <div class="sla-detail-card">
+                            <span>SLA Target</span>
+                            <strong>{{ sla["target_hours"] }} hrs</strong>
+                        </div>
+
+                        <div class="sla-detail-card">
+                            <span>Priority</span>
+                            <strong>{{ ticket["priority"] }}</strong>
+                        </div>
+
+                    </div>
+
+                    {% set sla_percent = (sla["age_hours"] / sla["target_hours"] * 100) if sla["target_hours"] else 0 %}
+                    {% if sla_percent > 100 %}
+                        {% set sla_percent = 100 %}
+                    {% endif %}
+
+                    <div class="sla-progress-section">
+
+                        <div class="sla-progress-header">
+                            <span>SLA Time Consumption</span>
+                            <strong>{{ "%.0f"|format(sla_percent) }}%</strong>
+                        </div>
+
+                        <div class="sla-progress">
+                            <div
+                                id="sla-progress-fill"
+                                class="sla-progress-fill sla-progress-{{ sla["sla_status"]|lower|replace(' ', '-') }}"
+                                data-progress="{{ sla_percent|round(0)|int }}"
+                            ></div>
+                        </div>
+
+                        <div class="sla-time-message">
+
+                            {% if sla["sla_status"] == "On Track" %}
+                                <span class="sla-message-positive">
+                                    {{ "%.1f"|format(sla["remaining_hours"]) }} hours remaining before the SLA target.
+                                </span>
+
+                            {% elif sla["sla_status"] == "At Risk" %}
+                                <span class="sla-message-warning">
+                                    {{ "%.1f"|format(sla["remaining_hours"]) }} hours remaining. SLA target is approaching.
+                                </span>
+
+                            {% elif sla["sla_status"] == "Overdue" %}
+                                <span class="sla-message-danger">
+                                    {{ "%.1f"|format(sla["remaining_hours"]|abs) }} hours overdue.
+                                </span>
+
+                            {% elif sla["sla_status"] == "Completed" %}
+                                <span class="sla-message-completed">
+                                    SLA monitoring completed for this ticket.
+                                </span>
+
+                            {% else %}
+                                <span>
+                                    SLA information is unavailable.
+                                </span>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+            <div>
+
+                <section class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h3>Ticket Status</h3>
+                            <p>Update ticket progress</p>
+                        </div>
+                    </div>
+
+                    <div class="current-status">
+                        <span class="badge status-{{ ticket['status']|lower|replace(' ', '-') }}">
+                            {{ ticket["status"] }}
+                        </span>
+                    </div>
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('update_status', ticket_id=ticket['id']) }}"
+                    >
+
+                        <div class="form-group">
+                            <label for="status">Change Status</label>
+
+                            <select id="status" name="status" required>
+
+                                <option value="Open" {% if ticket["status"] == "Open" %}selected{% endif %}>
+                                    Open
+                                </option>
+
+                                <option value="Assigned" {% if ticket["status"] == "Assigned" %}selected{% endif %}>
+                                    Assigned
+                                </option>
+
+                                <option value="In Progress" {% if ticket["status"] == "In Progress" %}selected{% endif %}>
+                                    In Progress
+                                </option>
+
+                                <option value="Pending" {% if ticket["status"] == "Pending" %}selected{% endif %}>
+                                    Pending
+                                </option>
+
+                                <option value="Resolved" {% if ticket["status"] == "Resolved" %}selected{% endif %}>
+                                    Resolved
+                                </option>
+
+                                <option value="Closed" {% if ticket["status"] == "Closed" %}selected{% endif %}>
+                                    Closed
+                                </option>
+
+                            </select>
+                        </div>
+
+                        <button type="submit" class="primary-button">
+                            Update Status
+                        </button>
+
+                    </form>
+
+                </section>
+
+                {% if role == "Administrator" %}
+
+                <section class="panel admin-assignment-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h3>Assign Technician</h3>
+                            <p>Assign this ticket to an ICT technician.</p>
+                        </div>
+                    </div>
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('assign_ticket', ticket_id=ticket['id']) }}"
+                    >
+
+                        <div class="form-group">
+
+                            <label for="technician_id">
+                                ICT Technician
+                            </label>
+
+                            <select
+                                id="technician_id"
+                                name="technician_id"
+                                required
+                            >
+
+                                <option value="">
+                                    Select technician
+                                </option>
+
+                                {% for technician in technicians %}
+
+                                    <option
+                                        value="{{ technician['id'] }}"
+                                        {% if ticket["assigned_to"] == technician["id"] %}selected{% endif %}
+                                    >
+                                        {{ technician["full_name"] }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                        <button type="submit" class="primary-button">
+                            Assign Ticket
+                        </button>
+
+                    </form>
+
+                </section>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+const slaProgress = document.getElementById("sla-progress-fill");
+if (slaProgress) {
+    slaProgress.style.width = `${slaProgress.dataset.progress}%`;
+}
+</script>
+
+</body>
+</html>

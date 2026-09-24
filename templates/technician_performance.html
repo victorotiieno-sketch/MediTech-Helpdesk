@@ -1,0 +1,252 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Technician Performance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            <a href="{{ url_for('admin_panel') }}">Administration</a>
+            <a href="{{ url_for('reports') }}">Reports</a>
+            <a href="{{ url_for('technician_performance') }}" class="active">
+                Technician Performance
+            </a>
+        </nav>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+
+            <div>
+                <span>ICT MANAGEMENT</span>
+                <h2>Technician Performance</h2>
+                <p>Monitor ticket workload and support activity across ICT technicians.</p>
+            </div>
+
+            <button
+                type="button"
+                class="primary-button"
+                onclick="window.print()"
+            >
+                Print Report
+            </button>
+
+        </div>
+
+        <section class="analytics-grid performance-summary-grid">
+
+            <div class="analytics-card">
+                <span>Assigned Tickets</span>
+                <strong>{{ total_assigned }}</strong>
+                <small>Tickets assigned to technicians</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>Active Tickets</span>
+                <strong>{{ total_active }}</strong>
+                <small>Currently requiring action</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>Resolved Tickets</span>
+                <strong>{{ total_resolved }}</strong>
+                <small>Resolved by technicians</small>
+            </div>
+
+            <div class="analytics-card">
+                <span>Closed Tickets</span>
+                <strong>{{ total_closed }}</strong>
+                <small>Completed support requests</small>
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="filter-header">
+                <div>
+                    <h3>Technician Workload</h3>
+                    <p>Ticket activity for each ICT technician.</p>
+                </div>
+            </div>
+
+            {% if technicians %}
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Technician</th>
+                                <th>Department</th>
+                                <th>Total</th>
+                                <th>Active</th>
+                                <th>Resolved</th>
+                                <th>Closed</th>
+                                <th>Account</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for technician in technicians %}
+
+                            <tr>
+
+                                <td>
+                                    <strong>{{ technician["full_name"] }}</strong>
+                                    <div class="table-secondary">
+                                        {{ technician["username"] }}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    {{ technician["department"] }}
+                                </td>
+
+                                <td>
+                                    <strong>{{ technician["total_tickets"] or 0 }}</strong>
+                                </td>
+
+                                <td>
+                                    {{ technician["active_tickets"] or 0 }}
+                                </td>
+
+                                <td>
+                                    {{ technician["resolved_tickets"] or 0 }}
+                                </td>
+
+                                <td>
+                                    {{ technician["closed_tickets"] or 0 }}
+                                </td>
+
+                                <td>
+                                    {% if technician["active"] %}
+                                        <span class="badge status-resolved">Active</span>
+                                    {% else %}
+                                        <span class="badge status-closed">Inactive</span>
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">T</div>
+
+                    <h4>No technicians found</h4>
+
+                    <p>
+                        There are currently no ICT technicians registered in the system.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+        <section class="panel performance-department-panel">
+
+            <div class="filter-header">
+                <div>
+                    <h3>Assigned Tickets by Department</h3>
+                    <p>Distribution of assigned ICT support requests across hospital departments.</p>
+                </div>
+            </div>
+
+            {% if department_stats %}
+
+                <div class="stats-list">
+
+                    {% for item in department_stats %}
+
+                        <div class="stats-row">
+
+                            <div class="stats-label">
+                                <span>{{ item["department"] }}</span>
+                                <strong>{{ item["ticket_count"] }}</strong>
+                            </div>
+
+                            <div class="stats-bar">
+                                {% set max_count = department_stats[0]["ticket_count"] %}
+                                {% if max_count > 0 %}
+                                    {% set percentage = (item["ticket_count"] / max_count * 100) %}
+                                {% else %}
+                                    {% set percentage = 0 %}
+                                {% endif %}
+
+                                <div
+                                    class="stats-bar-fill"
+                                    style="width: {{ percentage }}%;"
+                                ></div>
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+                    <h4>No department data</h4>
+                    <p>No assigned tickets are currently available.</p>
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

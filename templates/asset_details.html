@@ -1,0 +1,320 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Asset Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            <a href="{{ url_for('assets') }}" class="active">Asset Manager</a>
+            <a href="{{ url_for('notifications') }}">Notifications</a>
+
+            {% if role == 'Administrator' %}
+                <a href="{{ url_for('admin_panel') }}">Administration</a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-bottom">
+            <span>ICT SUPPORT SYSTEM</span>
+            <p>Version 1.0</p>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+            <div>
+                <span>ASSET MANAGEMENT</span>
+                <h2>Asset Details</h2>
+                <p>Complete information about this hospital ICT asset.</p>
+            </div>
+
+            <div class="page-actions">
+                <a href="{{ url_for('assets') }}" class="secondary-button">
+                    Back to Assets
+                </a>
+
+                {% if role == "Administrator" %}
+                    <a href="{{ url_for('edit_asset', asset_id=asset['id']) }}" class="primary-button">
+                        Edit Asset
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel asset-profile-panel">
+
+            <div class="asset-profile-header">
+
+                <div class="asset-icon">
+                    💻
+                </div>
+
+                <div class="asset-profile-title">
+                    <span class="asset-tag-large">
+                        {{ asset["asset_tag"] }}
+                    </span>
+
+                    <h3>{{ asset["name"] }}</h3>
+
+                    <p>{{ asset["equipment_type"] }}</p>
+                </div>
+
+                <div class="asset-status-wrapper">
+                    <span class="asset-status asset-status-{{ asset["status"]|lower }}">
+                        {{ asset["status"] }}
+                    </span>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3>Equipment Information</h3>
+                    <p>Technical identification and hardware details.</p>
+                </div>
+            </div>
+
+            <div class="asset-info-grid">
+
+                <div class="asset-info-item">
+                    <span>Asset Tag</span>
+                    <strong>{{ asset["asset_tag"] }}</strong>
+                </div>
+
+                <div class="asset-info-item">
+                    <span>Equipment Type</span>
+                    <strong>{{ asset["equipment_type"] }}</strong>
+                </div>
+
+                <div class="asset-info-item">
+                    <span>Manufacturer</span>
+                    <strong>
+                        {{ asset["manufacturer"] or "Not provided" }}
+                    </strong>
+                </div>
+
+                <div class="asset-info-item">
+                    <span>Model</span>
+                    <strong>
+                        {{ asset["model"] or "Not provided" }}
+                    </strong>
+                </div>
+
+                <div class="asset-info-item">
+                    <span>Serial Number</span>
+                    <strong>
+                        {{ asset["serial_number"] or "Not provided" }}
+                    </strong>
+                </div>
+
+                <div class="asset-info-item">
+                    <span>Current Status</span>
+                    <strong>{{ asset["status"] }}</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3>Assignment & Location</h3>
+                    <p>Current department, user and physical location.</p>
+                </div>
+            </div>
+
+            <div class="asset-info-grid">
+
+                <div class="asset-info-item">
+                    <span>Department</span>
+                    <strong>
+                        {{ asset["department"] or "Not assigned" }}
+                    </strong>
+                </div>
+
+                <div class="asset-info-item">
+                    <span>Assigned To</span>
+                    <strong>
+                        {{ asset["assigned_name"] or "Unassigned" }}
+                    </strong>
+
+                    {% if asset["assigned_username"] %}
+                        <small>
+                            @{{ asset["assigned_username"] }}
+                        </small>
+                    {% endif %}
+                </div>
+
+                <div class="asset-info-item full-width">
+                    <span>Location</span>
+                    <strong>
+                        {{ asset["location"] or "Not provided" }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3>Purchase & Warranty</h3>
+                    <p>Asset acquisition and warranty information.</p>
+                </div>
+            </div>
+
+            <div class="asset-info-grid">
+
+                <div class="asset-info-item">
+                    <span>Purchase Date</span>
+                    <strong>
+                        {{ asset["purchase_date"] or "Not provided" }}
+                    </strong>
+                </div>
+
+                <div class="asset-info-item">
+                    <span>Warranty Expiry</span>
+                    <strong>
+                        {{ asset["warranty_expiry"] or "Not provided" }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3>Additional Notes</h3>
+                    <p>Additional information recorded for this asset.</p>
+                </div>
+            </div>
+
+            <div class="asset-notes">
+                {% if asset["notes"] %}
+                    {{ asset["notes"] }}
+                {% else %}
+                    No additional notes have been recorded for this asset.
+                {% endif %}
+            </div>
+
+        </section>
+
+        {% if role == "Administrator" %}
+
+        <section class="panel asset-status-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3>Update Asset Status</h3>
+                    <p>Change the current operational status of this asset.</p>
+                </div>
+            </div>
+
+            <form method="POST"
+                  action="{{ url_for('update_asset_status', asset_id=asset['id']) }}"
+                  class="asset-status-form">
+
+                <div class="form-group">
+
+                    <label for="status">
+                        Asset Status
+                    </label>
+
+                    <select name="status" id="status" required>
+
+                        <option value="Active"
+                            {% if asset["status"] == "Active" %}selected{% endif %}>
+                            Active
+                        </option>
+
+                        <option value="Repair"
+                            {% if asset["status"] == "Repair" %}selected{% endif %}>
+                            Repair
+                        </option>
+
+                        <option value="Retired"
+                            {% if asset["status"] == "Retired" %}selected{% endif %}>
+                            Retired
+                        </option>
+
+                        <option value="Lost"
+                            {% if asset["status"] == "Lost" %}selected{% endif %}>
+                            Lost
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button type="submit" class="primary-button">
+                    Update Status
+                </button>
+
+            </form>
+
+        </section>
+
+        {% endif %}
+
+    </main>
+
+</div>
+
+</body>
+</html>
+

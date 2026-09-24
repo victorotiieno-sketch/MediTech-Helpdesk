@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-heading">
+    <div>
+        <span>HOSPITAL SYSTEMS</span>
+        <h1>Systems Directory</h1>
+        <p>Quick access to connected hospital applications and support systems.</p>
+    </div>
+</div>
+
+<div class="systems-directory-toolbar">
+    <label for="system-search">Search systems</label>
+    <input id="system-search" type="search" placeholder="Search by system or category">
+</div>
+
+<div class="systems-directory-grid" id="systems-grid">
+    {% for system in systems %}
+    <a class="system-link-card" href="{{ system['url'] }}" target="_blank" rel="noopener noreferrer" data-search="{{ system['name'] }} {{ system['category'] }} {{ system['description'] }}">
+        <div class="system-link-card-topline">
+            <span class="system-category">{{ system['category'] }}</span>
+            <span class="system-open-icon" aria-hidden="true">&rarr;</span>
+        </div>
+        <h2>{{ system['name'] }}</h2>
+        <p>{{ system['description'] }}</p>
+        <span class="system-link-url">Open system</span>
+    </a>
+    {% endfor %}
+</div>
+
+<div class="empty-state systems-empty" id="systems-empty" hidden>
+    <h3>No systems found</h3>
+    <p>Try a different search term.</p>
+</div>
+
+<script>
+    const systemSearch = document.getElementById("system-search");
+    const systemCards = Array.from(document.querySelectorAll(".system-link-card"));
+    const systemsEmpty = document.getElementById("systems-empty");
+
+    systemSearch.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
+        let visibleCards = 0;
+
+        systemCards.forEach(function (card) {
+            const matches = card.dataset.search.toLowerCase().includes(query);
+            card.hidden = !matches;
+            if (matches) {
+                visibleCards += 1;
+            }
+        });
+
+        systemsEmpty.hidden = visibleCards !== 0;
+    });
+</script>
+{% endblock %}

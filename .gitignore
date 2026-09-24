@@ -1,0 +1,16 @@
+﻿__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.db
+*.sqlite
+*.sqlite3
+*.backup
+*_backup.py
+add_*.py
+fix_*.py
+check_*.py
+integrate_*.py
+*.txt
+.vscode/

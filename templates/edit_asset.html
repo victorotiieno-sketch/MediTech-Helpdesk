@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediTech | Edit Asset</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo-icon">MT</div>
+        <div>
+            <h1>MediTech</h1>
+            <p>Hospital ICT Help Desk</p>
+        </div>
+    </div>
+
+    <div class="user-area">
+        <div>
+            <strong>{{ full_name }}</strong>
+            <span>{{ role }}</span>
+        </div>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+</header>
+
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
+            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            <a href="{{ url_for('assets') }}" class="active">Asset Manager</a>
+            <a href="{{ url_for('notifications') }}">Notifications</a>
+
+            {% if role == 'Administrator' %}
+                <a href="{{ url_for('admin_panel') }}">Administration</a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-bottom">
+            <span>ICT SUPPORT SYSTEM</span>
+            <p>Version 1.0</p>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="page-heading">
+            <div>
+                <span>ASSET MANAGEMENT</span>
+                <h2>Edit Asset</h2>
+                <p>Update the information recorded for this ICT asset.</p>
+            </div>
+
+            <a href="{{ url_for('asset_details', asset_id=asset['id']) }}"
+               class="secondary-button">
+                ← Back to Asset
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+
+            <section class="panel asset-form-panel">
+
+                <div class="asset-form-section">
+
+                    <h4>Basic Information</h4>
+
+                    <div class="asset-form-grid">
+
+                        <div class="form-group">
+                            <label for="asset_tag">Asset Tag *</label>
+                            <input
+                                type="text"
+                                id="asset_tag"
+                                name="asset_tag"
+                                value="{{ asset['asset_tag'] }}"
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Asset Name *</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                value="{{ asset['name'] }}"
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="equipment_type">Equipment Type *</label>
+
+                            <select
+                                id="equipment_type"
+                                name="equipment_type"
+                                required>
+
+                                {% for item in [
+                                    "Laptop",
+                                    "Desktop",
+                                    "Monitor",
+                                    "Printer",
+                                    "Scanner",
+                                    "Router",
+                                    "Switch",
+                                    "Server",
+                                    "UPS",
+                                    "Projector",
+                                    "Tablet",
+                                    "IP Phone",
+                                    "Other"
+                                ] %}
+
+                                    <option value="{{ item }}"
+                                        {% if asset['equipment_type'] == item %}selected{% endif %}>
+                                        {{ item }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">Status</label>
+
+                            <select id="status" name="status">
+
+                                <option value="Active"
+                                    {% if asset['status'] == 'Active' %}selected{% endif %}>
+                                    Active
+                                </option>
+
+                                <option value="Repair"
+                                    {% if asset['status'] == 'Repair' %}selected{% endif %}>
+                                    Repair
+                                </option>
+
+                                <option value="Retired"
+                                    {% if asset['status'] == 'Retired' %}selected{% endif %}>
+                                    Retired
+                                </option>
+
+                                <option value="Lost"
+                                    {% if asset['status'] == 'Lost' %}selected{% endif %}>
+                                    Lost
+                                </option>
+
+                            </select>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-section">
+
+                    <h4>Hardware Details</h4>
+
+                    <div class="asset-form-grid">
+
+                        <div class="form-group">
+                            <label for="manufacturer">Manufacturer</label>
+                            <input
+                                type="text"
+                                id="manufacturer"
+                                name="manufacturer"
+                                value="{{ asset['manufacturer'] or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="model">Model</label>
+                            <input
+                                type="text"
+                                id="model"
+                                name="model"
+                                value="{{ asset['model'] or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="serial_number">Serial Number</label>
+                            <input
+                                type="text"
+                                id="serial_number"
+                                name="serial_number"
+                                value="{{ asset['serial_number'] or '' }}">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-section">
+
+                    <h4>Assignment & Location</h4>
+
+                    <div class="asset-form-grid">
+
+                        <div class="form-group">
+                            <label for="department">Department</label>
+
+                            <select id="department" name="department">
+
+                                <option value="">
+                                    Select Department
+                                </option>
+
+                                {% for department in departments %}
+
+                                    <option value="{{ department['name'] }}"
+                                        {% if asset['department'] == department['name'] %}selected{% endif %}>
+                                        {{ department['name'] }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assigned_to">Assigned To</label>
+
+                            <select id="assigned_to" name="assigned_to">
+
+                                <option value="">
+                                    Unassigned
+                                </option>
+
+                                {% for person in staff %}
+
+                                    <option value="{{ person['id'] }}"
+                                        {% if asset['assigned_to'] == person['id'] %}selected{% endif %}>
+                                        {{ person['full_name'] }} — {{ person['department'] }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location</label>
+
+                            <input
+                                type="text"
+                                id="location"
+                                name="location"
+                                value="{{ asset['location'] or '' }}">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-section">
+
+                    <h4>Purchase & Warranty</h4>
+
+                    <div class="asset-form-grid">
+
+                        <div class="form-group">
+                            <label for="purchase_date">Purchase Date</label>
+
+                            <input
+                                type="date"
+                                id="purchase_date"
+                                name="purchase_date"
+                                value="{{ asset['purchase_date'] or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="warranty_expiry">Warranty Expiry</label>
+
+                            <input
+                                type="date"
+                                id="warranty_expiry"
+                                name="warranty_expiry"
+                                value="{{ asset['warranty_expiry'] or '' }}">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-section">
+
+                    <h4>Additional Notes</h4>
+
+                    <div class="form-group">
+
+                        <label for="notes">Notes</label>
+
+                        <textarea
+                            id="notes"
+                            name="notes"
+                            rows="5">{{ asset['notes'] or '' }}</textarea>
+
+                    </div>
+
+                </div>
+
+                <div class="asset-form-actions">
+
+                    <a href="{{ url_for('asset_details', asset_id=asset['id']) }}"
+                       class="secondary-button">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="primary-button">
+                        Save Changes
+                    </button>
+
+                </div>
+
+            </section>
+
+        </form>
+
+    </main>
+
+</div>
+
+</body>
+</html>
