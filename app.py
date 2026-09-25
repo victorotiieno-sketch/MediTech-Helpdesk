@@ -1,7 +1,9 @@
-﻿from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
-import sqlite3
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 import os
 import shutil
+import psycopg2
+from psycopg2.extras import DictCursor
+from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
@@ -10,16 +12,41 @@ app = Flask(__name__)
 app.secret_key = "meditech-secure-key-2026"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "database.db")
 BACKUP_DIR = os.path.join(BASE_DIR, "backups")
 
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not configured.")
+
+
+class DatabaseConnection:
+    def __init__(self, database_url):
+        self.connection = psycopg2.connect(database_url)
+        self.cursor = self.connection.cursor(cursor_factory=DictCursor)
+
+    def execute(self, query, params=None):
+        query = query.replace("?", "%s")
+        self.cursor.execute(query, params or ())
+        return self.cursor
+
+    def commit(self):
+        self.connection.commit()
+
+    def rollback(self):
+        self.connection.rollback()
+
+    def close(self):
+        self.cursor.close()
+        self.connection.close()
+
 
 def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return DatabaseConnection(DATABASE_URL)
 
 
 SLA_TARGETS = {
@@ -82,196 +109,6 @@ def calculate_sla(created_at, priority, status):
         "remaining_hours": round(remaining_hours, 2),
         "sla_status": sla_status
     }
-
-
-def init_db():
-    conn = get_db()
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            full_name TEXT NOT NULL,
-            role TEXT NOT NULL,
-            department TEXT DEFAULT 'ICT',
-            active INTEGER DEFAULT 1
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS departments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS tickets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            category TEXT NOT NULL,
-            priority TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'Open',
-            department TEXT NOT NULL,
-            created_by INTEGER NOT NULL,
-            assigned_to INTEGER,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY (created_by) REFERENCES users (id),
-            FOREIGN KEY (assigned_to) REFERENCES users (id)
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS ticket_activity (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ticket_id INTEGER NOT NULL,
-            user_id INTEGER NOT NULL,
-            action TEXT NOT NULL,
-            details TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY (ticket_id) REFERENCES tickets (id),
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            ticket_id INTEGER,
-            title TEXT NOT NULL,
-            message TEXT NOT NULL,
-            notification_type TEXT NOT NULL DEFAULT 'info',
-            is_read INTEGER NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users (id),
-            FOREIGN KEY (ticket_id) REFERENCES tickets (id)
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS assets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            asset_tag TEXT NOT NULL UNIQUE,
-            name TEXT NOT NULL,
-            equipment_type TEXT NOT NULL,
-            manufacturer TEXT,
-            model TEXT,
-            serial_number TEXT,
-            department TEXT,
-            assigned_to INTEGER,
-            location TEXT,
-            purchase_date TEXT,
-            warranty_expiry TEXT,
-            status TEXT NOT NULL DEFAULT 'Active',
-            notes TEXT,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY (assigned_to) REFERENCES users (id)
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS facilities (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            location TEXT,
-            contact TEXT,
-            active INTEGER DEFAULT 1
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS priorities (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            sla_hours INTEGER NOT NULL DEFAULT 24,
-            active INTEGER DEFAULT 1
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS categories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            description TEXT,
-            active INTEGER DEFAULT 1
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS issue_types (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            category TEXT,
-            description TEXT,
-            active INTEGER DEFAULT 1
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS equipment_types (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            description TEXT,
-            active INTEGER DEFAULT 1
-        )
-    """)
-
-
-    existing_user = conn.execute(
-        "SELECT id FROM users WHERE username = ?",
-        ("admin",)
-    ).fetchone()
-
-    if not existing_user:
-        password = generate_password_hash("admin123")
-
-        conn.execute("""
-            INSERT INTO users (
-                username,
-                password,
-                full_name,
-                role,
-                department,
-                active
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            "admin",
-            password,
-            "System Administrator",
-            "Administrator",
-            "ICT",
-            1
-        ))
-
-    departments = [
-        "ICT",
-        "Emergency",
-        "Outpatient",
-        "Laboratory",
-        "Pharmacy",
-        "Radiology",
-        "Finance",
-        "Human Resources",
-        "Medical Records",
-        "Nursing",
-        "Administration"
-    ]
-
-    for department in departments:
-        conn.execute(
-            "INSERT OR IGNORE INTO departments (name) VALUES (?)",
-            (department,)
-        )
-
-    conn.commit()
-    conn.close()
-
-
-init_db()
 
 
 def log_activity(ticket_id, user_id, action, details):
@@ -859,6 +696,7 @@ def create_ticket():
                 created_at
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            RETURNING id
         """, (
             title,
             description,
@@ -870,7 +708,7 @@ def create_ticket():
             created_at
         ))
 
-        ticket_id = cursor.lastrowid
+        ticket_id = cursor.fetchone()["id"]
 
         conn.execute("""
             INSERT INTO ticket_activity (
@@ -1208,7 +1046,7 @@ def add_facility():
         )
         conn.commit()
         flash("Facility added successfully.", "success")
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         flash("Facility already exists.", "error")
     finally:
         conn.close()
@@ -1273,7 +1111,7 @@ def add_priority():
         )
         conn.commit()
         flash("Priority added successfully.", "success")
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         flash("Priority already exists.", "error")
     finally:
         conn.close()
@@ -1328,7 +1166,7 @@ def add_category():
         )
         conn.commit()
         flash("Category added successfully.", "success")
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         flash("Category already exists.", "error")
     finally:
         conn.close()
@@ -1384,7 +1222,7 @@ def add_issue_type():
         )
         conn.commit()
         flash("Issue type added successfully.", "success")
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         flash("Issue type already exists.", "error")
     finally:
         conn.close()
@@ -1439,7 +1277,7 @@ def add_equipment_type():
         )
         conn.commit()
         flash("Equipment type added successfully.", "success")
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         flash("Equipment type already exists.", "error")
     finally:
         conn.close()
@@ -1826,7 +1664,7 @@ def add_department():
         )
         conn.commit()
         flash("Department added successfully.", "success")
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         flash("Department already exists.", "error")
 
     conn.close()
@@ -1902,16 +1740,46 @@ def mark_all_notifications_read():
 @app.route("/admin/backup")
 @admin_required
 def backup_database():
-    os.makedirs(BACKUP_DIR, exist_ok=True)
+    import json
+
+    tables = [
+        "users",
+        "departments",
+        "facilities",
+        "priorities",
+        "categories",
+        "issue_types",
+        "equipment_types",
+        "tickets",
+        "ticket_activity",
+        "notifications",
+        "assets"
+    ]
+
+    conn = get_db()
+    backup_data = {}
+
+    try:
+        for table in tables:
+            rows = conn.execute(f"SELECT * FROM {table}").fetchall()
+            backup_data[table] = [dict(row) for row in rows]
+    finally:
+        conn.close()
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_path = os.path.join(BACKUP_DIR, f"meditech_backup_{timestamp}.db")
-    shutil.copy2(DATABASE, backup_path)
+    backup_path = os.path.join(
+        BACKUP_DIR,
+        f"meditech_backup_{timestamp}.json"
+    )
+
+    with open(backup_path, "w", encoding="utf-8") as backup_file:
+        json.dump(backup_data, backup_file, indent=2, default=str)
 
     return send_file(
         backup_path,
         as_attachment=True,
         download_name=os.path.basename(backup_path),
-        mimetype="application/octet-stream"
+        mimetype="application/json"
     )
 
 
@@ -2362,7 +2230,7 @@ def create_asset():
             flash("Asset registered successfully.", "success")
             return redirect(url_for("assets"))
 
-        except sqlite3.IntegrityError:
+        except psycopg2.IntegrityError:
             conn.close()
             flash(
                 "Asset Tag already exists. Use a unique Asset Tag.",
@@ -2569,7 +2437,7 @@ def edit_asset(asset_id):
                 url_for("asset_details", asset_id=asset_id)
             )
 
-        except sqlite3.IntegrityError:
+        except psycopg2.IntegrityError:
             conn.close()
             flash(
                 "Asset Tag already exists. Use a unique Asset Tag.",
@@ -2591,5 +2459,4 @@ def edit_asset(asset_id):
     )
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
