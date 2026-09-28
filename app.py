@@ -8,15 +8,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = "meditech-secure-key-2026"
+app.secret_key = os.getenv("SECRET_KEY")
+
+if not app.secret_key:
+    raise RuntimeError("SECRET_KEY is not configured.")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKUP_DIR = os.path.join(BASE_DIR, "backups")
 
 os.makedirs(BACKUP_DIR, exist_ok=True)
-
-load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
