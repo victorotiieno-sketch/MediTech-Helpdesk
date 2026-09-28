@@ -251,69 +251,8 @@ def login():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    if "user_id" in session:
-        return redirect(url_for("dashboard"))
-
-    conn = get_db()
-    departments = conn.execute(
-        "SELECT * FROM departments ORDER BY name"
-    ).fetchall()
-    conn.close()
-
-    if request.method == "POST":
-        full_name = request.form.get("full_name", "").strip()
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-        department = request.form.get("department", "ICT").strip()
-
-        if not full_name or not username or not password:
-            flash("Please complete all account fields.", "error")
-            return redirect(url_for("register"))
-
-        conn = get_db()
-        existing = conn.execute(
-            "SELECT id FROM users WHERE username = ?",
-            (username,)
-        ).fetchone()
-
-        if existing:
-            conn.close()
-            flash("Username already exists. Please choose another.", "error")
-            return redirect(url_for("register"))
-
-        hashed_password = generate_password_hash(password)
-
-        conn.execute("""
-            INSERT INTO users (
-                username,
-                password,
-                full_name,
-                role,
-                department,
-                active
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            username,
-            hashed_password,
-            full_name,
-            "Staff",
-            department,
-            1
-        ))
-
-        conn.commit()
-        conn.close()
-
-        flash("Account created successfully. Please sign in.", "success")
-        return redirect(url_for("login"))
-
-    return render_template(
-        "register.html",
-        departments=departments,
-        full_name="",
-        role="Staff"
-    )
+    flash("Account registration is managed by your administrator.", "error")
+    return redirect(url_for("login"))
 
 
 @app.route("/dashboard")
