@@ -166,10 +166,30 @@ def create_notification(user_id, ticket_id, title, message, notification_type="i
     conn.close()
 
 
+def has_active_session():
+    user_id = session.get("user_id")
+    if user_id is None:
+        return False
+
+    conn = get_db()
+    user = conn.execute(
+        "SELECT active FROM users WHERE id = ?",
+        (user_id,)
+    ).fetchone()
+    conn.close()
+
+    if user and user["active"] == 1:
+        return True
+
+    session.clear()
+    flash("Your account is inactive or no longer exists. Please sign in again.", "error")
+    return False
+
+
 def login_required(function):
     @wraps(function)
     def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
+        if not has_active_session():
             return redirect(url_for("login"))
 
         return function(*args, **kwargs)
@@ -180,7 +200,7 @@ def login_required(function):
 def admin_required(function):
     @wraps(function)
     def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
+        if not has_active_session():
             return redirect(url_for("login"))
 
         if session.get("role") != "Administrator":
@@ -195,7 +215,7 @@ def admin_required(function):
 def technician_required(function):
     @wraps(function)
     def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
+        if not has_active_session():
             return redirect(url_for("login"))
 
         if session.get("role") not in ["Administrator", "ICT Technician"]:

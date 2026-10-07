@@ -3389,3 +3389,291 @@ tbody tr:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* Glass-inspired refresh for the shared application surfaces. */
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --navy: #10213b;
+    --text: #26364d;
+    --muted: #687b95;
+    --border: rgba(148, 169, 197, 0.32);
+    --background: #edf4fb;
+    --panel: rgba(255, 255, 255, 0.72);
+    --soft: rgba(255, 255, 255, 0.52);
+    --shadow: 0 18px 45px rgba(32, 57, 88, 0.09);
+}
+
+body {
+    background:
+        radial-gradient(ellipse at 7% 4%, rgba(96, 165, 250, 0.2), transparent 33rem),
+        radial-gradient(ellipse at 92% 16%, rgba(129, 140, 248, 0.13), transparent 30rem),
+        linear-gradient(145deg, #f4f8fd 0%, #edf4fb 55%, #f7f9fd 100%);
+    background-attachment: fixed;
+    color: var(--text);
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(255, 255, 255, 0.76);
+    border-bottom-color: rgba(148, 169, 197, 0.28);
+    box-shadow: 0 8px 24px rgba(31, 55, 84, 0.045);
+}
+
+.sidebar {
+    background: linear-gradient(180deg, rgba(17, 34, 59, 0.96), rgba(22, 39, 65, 0.92));
+    border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar nav a {
+    color: rgba(235, 243, 255, 0.78);
+}
+
+.sidebar nav a:hover,
+.sidebar nav a.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.76));
+    box-shadow: 0 9px 22px rgba(37, 99, 235, 0.25);
+}
+
+.main-content {
+    padding-top: 34px;
+}
+
+.dashboard-grid > *,
+.details-grid > *,
+.admin-grid > * {
+    min-width: 0;
+}
+
+.table-container {
+    max-width: 100%;
+}
+
+.page-heading {
+    margin-bottom: 26px;
+}
+
+.page-heading h2,
+.welcome h2,
+.technician-welcome h2 {
+    letter-spacing: -0.035em;
+}
+
+.page-heading > div > span,
+.welcome span {
+    letter-spacing: 0.16em;
+}
+
+.login-container {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse at 18% 20%, rgba(96, 165, 250, 0.28), transparent 34rem),
+        radial-gradient(ellipse at 86% 80%, rgba(129, 140, 248, 0.2), transparent 30rem),
+        linear-gradient(145deg, #edf4fb, #f8faff);
+}
+
+.login-card,
+.panel,
+.form-panel,
+.stat-card,
+.technician-stat,
+.dashboard-date,
+.asset-summary-card,
+.asset-profile-panel,
+.asset-status-panel,
+.system-link-card,
+.systems-empty {
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.login-card {
+    border-radius: 24px;
+    box-shadow: 0 28px 75px rgba(38, 62, 94, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.panel,
+.form-panel {
+    border-radius: 18px;
+}
+
+.stat-card,
+.technician-stat {
+    border-radius: 16px;
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.stat-card:hover,
+.technician-stat:hover,
+.asset-summary-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(96, 165, 250, 0.5);
+    box-shadow: 0 22px 42px rgba(32, 57, 88, 0.12);
+}
+
+.overview-hero {
+    background:
+        radial-gradient(ellipse at 100% 0, rgba(147, 197, 253, 0.25), transparent 55%),
+        rgba(255, 255, 255, 0.64);
+    border-color: rgba(255, 255, 255, 0.8);
+    border-radius: 18px;
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.quick-action-card {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(148, 169, 197, 0.3);
+    border-radius: 14px;
+}
+
+.quick-action-card:hover {
+    background: rgba(255, 255, 255, 0.86);
+    border-color: rgba(96, 165, 250, 0.55);
+}
+
+.form-panel {
+    padding: 26px;
+}
+
+.input-group input,
+.form-group input,
+.form-group select,
+.form-group textarea,
+.filter-form input,
+.filter-form select,
+.systems-directory-toolbar input {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(148, 169, 197, 0.4);
+    border-radius: 12px;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.input-group input:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.filter-form input:focus,
+.filter-form select:focus,
+.systems-directory-toolbar input:focus {
+    background: #fff;
+    border-color: rgba(37, 99, 235, 0.72);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+button,
+.primary-button {
+    border-radius: 11px;
+    background: linear-gradient(135deg, #3478ed, #2459d3);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+
+button:hover,
+.primary-button:hover {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    box-shadow: 0 11px 24px rgba(37, 99, 235, 0.25);
+}
+
+.secondary-button,
+.ticket-open-button {
+    border-color: rgba(148, 169, 197, 0.38);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.62);
+    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.secondary-button:hover,
+.ticket-open-button:hover {
+    background: rgba(255, 255, 255, 0.94);
+    border-color: rgba(96, 165, 250, 0.55);
+    transform: translateY(-1px);
+}
+
+table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th {
+    background: rgba(239, 245, 252, 0.82);
+}
+
+tbody tr {
+    transition: background 140ms ease;
+}
+
+tbody tr:hover {
+    background: rgba(239, 246, 255, 0.62);
+}
+
+.notification-item,
+.asset-info-item,
+.technician-department {
+    background: rgba(255, 255, 255, 0.48);
+    border-color: rgba(148, 169, 197, 0.3);
+}
+
+.alert {
+    border-radius: 12px;
+}
+
+.sidebar nav a:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(59, 130, 246, 0.55);
+    outline-offset: 3px;
+}
+
+@supports (backdrop-filter: blur(12px)) {
+    .topbar,
+    .login-card,
+    .panel,
+    .form-panel,
+    .stat-card,
+    .technician-stat,
+    .dashboard-date,
+    .asset-summary-card,
+    .asset-profile-panel,
+    .asset-status-panel,
+    .system-link-card,
+    .systems-empty {
+        backdrop-filter: blur(16px) saturate(135%);
+        -webkit-backdrop-filter: blur(16px) saturate(135%);
+    }
+
+    .topbar {
+        background: rgba(255, 255, 255, 0.68);
+    }
+}
+
+@media (max-width: 600px) {
+    .main-content {
+        padding: 22px 14px 28px;
+    }
+
+    .form-panel {
+        padding: 19px 16px;
+    }
+
+    .login-card {
+        padding: 32px 24px;
+        border-radius: 20px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
