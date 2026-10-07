@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
+from flask import Flask, g, has_app_context, render_template, request, redirect, url_for, session, flash, send_file
 import os
 import shutil
 import tempfile
@@ -33,6 +33,7 @@ class DatabaseConnection:
     def __init__(self, database_url):
         self.connection = psycopg2.connect(database_url)
         self.cursor = self.connection.cursor(cursor_factory=DictCursor)
+        self.closed = False
 
     def execute(self, query, params=None):
         query = query.replace("?", "%s")
@@ -46,12 +47,28 @@ class DatabaseConnection:
         self.connection.rollback()
 
     def close(self):
-        self.cursor.close()
-        self.connection.close()
+        if not self.closed:
+            self.cursor.close()
+            self.connection.close()
+            self.closed = True
 
 
 def get_db():
-    return DatabaseConnection(DATABASE_URL)
+    if not has_app_context():
+        return DatabaseConnection(DATABASE_URL)
+
+    connection = getattr(g, "database_connection", None)
+    if connection is None or connection.closed:
+        connection = DatabaseConnection(DATABASE_URL)
+        g.database_connection = connection
+    return connection
+
+
+@app.teardown_appcontext
+def close_db(_error=None):
+    connection = getattr(g, "database_connection", None)
+    if connection is not None:
+        connection.close()
 
 
 SLA_TARGETS = {
@@ -178,7 +195,6 @@ def has_active_session():
         "SELECT active FROM users WHERE id = ?",
         (user_id,)
     ).fetchone()
-    conn.close()
 
     if user and user["active"] == 1:
         return True
