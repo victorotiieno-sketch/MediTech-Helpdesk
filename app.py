@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import psycopg2
 from psycopg2.extras import DictCursor
+from psycopg2.pool import ThreadedConnectionPool
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
@@ -28,10 +29,21 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not configured.")
 
+DATABASE_POOL = ThreadedConnectionPool(
+    1,
+    5,
+    DATABASE_URL,
+    connect_timeout=5,
+    keepalives=1,
+    keepalives_idle=30,
+    keepalives_interval=10,
+    keepalives_count=3,
+)
+
 
 class DatabaseConnection:
-    def __init__(self, database_url):
-        self.connection = psycopg2.connect(database_url)
+    def __init__(self):
+        self.connection = DATABASE_POOL.getconn()
         self.cursor = self.connection.cursor(cursor_factory=DictCursor)
         self.closed = False
 
@@ -49,17 +61,17 @@ class DatabaseConnection:
     def close(self):
         if not self.closed:
             self.cursor.close()
-            self.connection.close()
+            DATABASE_POOL.putconn(self.connection)
             self.closed = True
 
 
 def get_db():
     if not has_app_context():
-        return DatabaseConnection(DATABASE_URL)
+        return DatabaseConnection()
 
     connection = getattr(g, "database_connection", None)
     if connection is None or connection.closed:
-        connection = DatabaseConnection(DATABASE_URL)
+        connection = DatabaseConnection()
         g.database_connection = connection
     return connection
 
