@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 import os
 import shutil
+import tempfile
 import psycopg2
 from psycopg2.extras import DictCursor
 from dotenv import load_dotenv
@@ -17,7 +18,8 @@ if not app.secret_key:
     raise RuntimeError("SECRET_KEY is not configured.")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BACKUP_DIR = os.path.join(BASE_DIR, "backups")
+BACKUP_BASE_DIR = tempfile.gettempdir() if os.getenv("VERCEL") else BASE_DIR
+BACKUP_DIR = os.path.join(BACKUP_BASE_DIR, "backups")
 
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
