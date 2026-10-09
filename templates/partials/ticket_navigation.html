@@ -1,17 +1,4 @@
-<details class="nav-group" {% if request.endpoint in ['tickets', 'create_ticket', 'ticket_details', 'ticket_activity'] %}open{% endif %}>
-    <summary>
-        <span class="nav-icon" aria-hidden="true">T</span>
-        <span>Tickets</span>
-        <span class="nav-chevron" aria-hidden="true"></span>
-    </summary>
-    <div class="nav-submenu">
-        <a href="{{ url_for('tickets') }}" {% if request.endpoint in ['tickets', 'ticket_details', 'ticket_activity'] %}class="active" aria-current="page"{% endif %}>
-            <span class="nav-icon" aria-hidden="true">▤</span>
-            <span>View Tickets</span>
-        </a>
-        <a href="{{ url_for('create_ticket') }}" {% if request.endpoint == 'create_ticket' %}class="active" aria-current="page"{% endif %}>
-            <span class="nav-icon" aria-hidden="true">＋</span>
-            <span>Create Ticket</span>
-        </a>
-    </div>
-</details>
+<a href="{{ url_for('tickets') }}" {% if request.endpoint in ['tickets', 'create_ticket', 'ticket_details', 'ticket_activity'] %}class="active" aria-current="page"{% endif %}>
+    <span class="nav-icon" aria-hidden="true">▤</span>
+    Tickets
+</a>

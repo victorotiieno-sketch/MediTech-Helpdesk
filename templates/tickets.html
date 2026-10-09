@@ -49,16 +49,15 @@
 
     <main class="main-content">
 
-        <div class="page-heading">
+        <div class="tickets-page-heading">
 
             <div>
                 <span>ICT SUPPORT</span>
-                <h2>Tickets</h2>
-                <p>Search and manage hospital ICT support requests.</p>
+                <h2><span class="tickets-heading-icon" aria-hidden="true">▤</span>Support Tickets</h2>
             </div>
 
-            <a href="{{ url_for('create_ticket') }}" class="primary-button">
-                + Create Ticket
+            <a href="{{ url_for('create_ticket') }}" class="primary-button tickets-create-button">
+                <span aria-hidden="true">＋</span> Create New Ticket
             </a>
 
         </div>
