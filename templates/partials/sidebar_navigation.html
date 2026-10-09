@@ -1,0 +1,55 @@
+<nav class="app-navigation">
+    <a href="{{ url_for('dashboard') }}" {% if request.endpoint in ['dashboard', 'technician_dashboard'] %}class="active" aria-current="page"{% endif %}>
+        <span class="nav-icon" aria-hidden="true">D</span>
+        <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('tickets') }}" {% if request.endpoint in ['tickets', 'create_ticket', 'ticket_details', 'ticket_activity'] %}class="active" aria-current="page"{% endif %}>
+        <span class="nav-icon" aria-hidden="true">T</span>
+        <span>Tickets</span>
+    </a>
+    <a href="{{ url_for('assets') }}" {% if request.endpoint in ['assets', 'create_asset', 'asset_details', 'edit_asset', 'update_asset_status'] %}class="active" aria-current="page"{% endif %}>
+        <span class="nav-icon" aria-hidden="true">A</span>
+        <span>Asset Manager</span>
+    </a>
+    <a href="{{ url_for('systems_directory') }}" {% if request.endpoint == 'systems_directory' %}class="active" aria-current="page"{% endif %}>
+        <span class="nav-icon" aria-hidden="true">S</span>
+        <span>Systems Directory</span>
+    </a>
+    <a href="{{ url_for('notifications') }}" {% if request.endpoint in ['notifications', 'mark_notification_read', 'mark_all_notifications_read'] %}class="active" aria-current="page"{% endif %}>
+        <span class="nav-icon" aria-hidden="true">N</span>
+        <span>Notifications</span>
+        {% if notifications is defined %}
+            {% set unread_count = notifications|selectattr('is_read', 'equalto', 0)|list|length %}
+            {% if unread_count > 0 %}
+                <span class="notification-count">{{ unread_count }}</span>
+            {% endif %}
+        {% endif %}
+    </a>
+    {% if role == "Administrator" %}
+        <span class="navigation-divider">ADMINISTRATION</span>
+        <a href="{{ url_for('reports') }}" {% if request.endpoint == 'reports' %}class="active" aria-current="page"{% endif %}>
+            <span class="nav-icon" aria-hidden="true">R</span>
+            <span>Reports</span>
+        </a>
+        <a href="{{ url_for('configuration') }}" {% if request.endpoint == 'configuration' %}class="active" aria-current="page"{% endif %}>
+            <span class="nav-icon" aria-hidden="true">C</span>
+            <span>Configuration</span>
+        </a>
+        <a href="{{ url_for('admin_panel') }}" {% if request.endpoint == 'admin_panel' %}class="active" aria-current="page"{% endif %}>
+            <span class="nav-icon" aria-hidden="true">M</span>
+            <span>Administration</span>
+        </a>
+        <a href="{{ url_for('technician_performance') }}" {% if request.endpoint == 'technician_performance' %}class="active" aria-current="page"{% endif %}>
+            <span class="nav-icon" aria-hidden="true">P</span>
+            <span>Technician Performance</span>
+        </a>
+        <a href="{{ url_for('user_management') }}" {% if request.endpoint == 'user_management' %}class="active" aria-current="page"{% endif %}>
+            <span class="nav-icon" aria-hidden="true">U</span>
+            <span>User Management</span>
+        </a>
+        <a href="{{ url_for('backup_database') }}" {% if request.endpoint == 'backup_database' %}class="active" aria-current="page"{% endif %}>
+            <span class="nav-icon" aria-hidden="true">B</span>
+            <span>Backup Database</span>
+        </a>
+    {% endif %}
+</nav>

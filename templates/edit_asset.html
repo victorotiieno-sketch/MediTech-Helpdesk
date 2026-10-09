@@ -34,17 +34,7 @@
 
     <aside class="sidebar">
 
-        <nav>
-            <a href="{{ url_for('dashboard') }}">Dashboard</a>
-            {% include "partials/ticket_navigation.html" %}
-
-            <a href="{{ url_for('assets') }}" class="active">Asset Manager</a>
-            <a href="{{ url_for('notifications') }}">Notifications</a>
-
-            {% if role == 'Administrator' %}
-                <a href="{{ url_for('admin_panel') }}">Administration</a>
-            {% endif %}
-        </nav>
+        {% include "partials/sidebar_navigation.html" %}
 
         <div class="sidebar-bottom">
             <span>ICT SUPPORT SYSTEM</span>

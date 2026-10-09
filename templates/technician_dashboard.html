@@ -54,19 +54,7 @@
                 WORKSPACE
             </span>
 
-            <nav>
-
-                <a
-                    href="{{ url_for('technician_dashboard') }}"
-                    class="active"
-                >
-                    <span class="nav-icon">▦</span>
-                    My Dashboard
-                </a>
-
-            {% include "partials/ticket_navigation.html" %}
-
-            </nav>
+            {% include "partials/sidebar_navigation.html" %}
 
         </div>
 

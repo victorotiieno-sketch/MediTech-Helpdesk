@@ -8,23 +8,9 @@
 </head>
 <body>
 
-<div class="dashboard-layout">
+<div class="dashboard-layout notifications-layout">
 
     <aside class="sidebar">
-
-        <div class="sidebar-header">
-            <div class="logo-icon" aria-label="MediTech logo">
-                <svg viewBox="0 0 64 64" aria-hidden="true">
-                    <path d="M16 18h8l7 15 7-15h8v28h-7V30l-8 17-8-17v16h-7z" fill="#ffffff"></path>
-                    <path d="M38 13h8v8h8v8h-8v8h-8v-8h-8v-8h8z" fill="#9be7ff"></path>
-                </svg>
-            </div>
-            <div>
-                <h2>MediTech</h2>
-                <span>ICT Help Desk</span>
-            </div>
-        </div>
-
         <div class="sidebar-user">
             <div class="user-avatar">
                 {{ full_name[0]|upper }}
@@ -35,39 +21,7 @@
             </div>
         </div>
 
-        <nav>
-            {% if role == "ICT Technician" %}
-            <a href="{{ url_for('technician_dashboard') }}">
-                <span class="nav-icon">D</span>
-                My Dashboard
-            </a>
-            {% else %}
-            <a href="{{ url_for('dashboard') }}">
-                <span class="nav-icon">D</span>
-                Dashboard
-            </a>
-            {% endif %}
-
-            {% include "partials/ticket_navigation.html" %}
-
-            <a href="{{ url_for('notifications') }}" class="active">
-                <span class="nav-icon">!</span>
-                Notifications
-                {% set unread_count = notifications|selectattr('is_read', 'equalto', 0)|list|length %}
-                {% if unread_count > 0 %}
-                    <span class="notification-count">
-                        {{ unread_count }}
-                    </span>
-                {% endif %}
-            </a>
-
-            {% if role == "Administrator" %}
-            <a href="{{ url_for('admin_panel') }}">
-                <span class="nav-icon">A</span>
-                Administration
-            </a>
-            {% endif %}
-        </nav>
+        {% include "partials/sidebar_navigation.html" %}
 
         <div class="sidebar-footer">
             <a href="{{ url_for('logout') }}">
@@ -80,7 +34,7 @@
 
     <main class="main-content">
 
-        <header class="topbar">
+        <header class="notifications-heading">
             <div>
                 <h1>Notifications</h1>
                 <p>Stay updated on your help desk activities.</p>
@@ -193,4 +147,3 @@ function markNotificationRead(event, notificationId, destination) {
 
 </body>
 </html>
-

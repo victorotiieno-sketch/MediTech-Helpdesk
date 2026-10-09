@@ -38,39 +38,7 @@
 
     <aside class="sidebar">
 
-        <nav>
-
-            <a href="{{ url_for('dashboard') }}">
-                Dashboard
-            </a>
-
-            {% include "partials/ticket_navigation.html" %}
-
-            <a href="{{ url_for('admin_panel') }}" class="active">
-                Administration
-            </a>
-
-            <a href="{{ url_for('configuration') }}">
-                Configuration
-            </a>
-
-            <a href="{{ url_for('reports') }}">
-                Reports
-            </a>
-
-            <a href="{{ url_for('technician_performance') }}">
-                Technician Performance
-            </a>
-
-            <a href="{{ url_for('user_management') }}">
-                User Management
-            </a>
-
-            <a href="{{ url_for('backup_database') }}">
-                Backup Database
-            </a>
-
-        </nav>
+        {% include "partials/sidebar_navigation.html" %}
 
     </aside>
 

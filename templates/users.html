@@ -38,23 +38,7 @@
 
     <aside class="sidebar">
 
-        <nav>
-
-            <a href="{{ url_for('dashboard') }}">
-                Dashboard
-            </a>
-
-            {% include "partials/ticket_navigation.html" %}
-
-            <a href="{{ url_for('admin_panel') }}">
-                Administration
-            </a>
-
-            <a href="{{ url_for('user_management') }}" class="active">
-                User Management
-            </a>
-
-        </nav>
+        {% include "partials/sidebar_navigation.html" %}
 
     </aside>
 
