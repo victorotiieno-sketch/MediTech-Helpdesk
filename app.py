@@ -570,7 +570,6 @@ def dashboard():
         in_progress=in_progress,
         resolved=resolved,
         closed=closed,
-        status_counts=status_counts,
         assignee_rows=assignee_rows,
         priority_rows=priority_rows,
         monthly_rows=monthly_rows,
