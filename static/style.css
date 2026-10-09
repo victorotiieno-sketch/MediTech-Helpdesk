@@ -3725,3 +3725,271 @@ textarea:focus-visible {
         animation-iteration-count: 1 !important;
     }
 }
+
+.analytics-stat {
+    min-width: 0;
+    padding: 16px;
+}
+
+.analytics-stat .stat-icon {
+    flex: 0 0 42px;
+}
+
+.stat-icon-warning {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.stat-icon-live {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.stat-icon-success {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.analytics-section {
+    display: grid;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.analytics-panel {
+    min-width: 0;
+    padding: 0 20px 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+
+.analytics-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 19px 0 15px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid #edf2f7;
+    cursor: pointer;
+    list-style: none;
+}
+
+.analytics-panel-heading::-webkit-details-marker {
+    display: none;
+}
+
+.analytics-panel-heading > span:first-child {
+    display: grid;
+    gap: 5px;
+}
+
+.analytics-panel-heading strong {
+    color: var(--navy);
+    font-size: 16px;
+}
+
+.analytics-panel-heading small,
+.monthly-analytics-toolbar > span {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.analytics-toggle {
+    flex: 0 0 auto;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.analytics-panel:not([open]) .analytics-toggle::after {
+    content: "Show";
+}
+
+.analytics-panel[open] .analytics-toggle::after {
+    content: "Hide";
+}
+
+.analytics-panel .analytics-toggle {
+    font-size: 0;
+}
+
+.analytics-panel .analytics-toggle::after {
+    font-size: 12px;
+}
+
+.analytics-table {
+    min-width: 680px;
+}
+
+.analytics-wide-table {
+    min-width: 940px;
+}
+
+.analytics-table th {
+    white-space: nowrap;
+}
+
+.analytics-table td {
+    vertical-align: middle;
+}
+
+.analytics-table td small,
+.monthly-analytics-table th small {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.analytics-number {
+    font-weight: 700;
+}
+
+.analytics-number.is-overdue {
+    color: #b91c1c;
+}
+
+.analytics-denominator {
+    white-space: nowrap;
+}
+
+.analytics-note {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.analytics-empty,
+.analytics-no-data {
+    color: var(--muted);
+    text-align: center;
+}
+
+.analytics-share {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 105px;
+}
+
+.analytics-share-bar {
+    width: 64px;
+    height: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #eaf0f8;
+}
+
+.analytics-share-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #2563eb, #38bdf8);
+}
+
+.analytics-share strong {
+    color: var(--navy);
+    font-size: 11px;
+}
+
+.monthly-analytics-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 0;
+}
+
+.monthly-analytics-toolbar .secondary-button {
+    height: 36px;
+    padding: 0 13px;
+    font-size: 12px;
+}
+
+.monthly-analytics-table {
+    min-width: 790px;
+}
+
+.monthly-analytics-table td {
+    text-align: center;
+}
+
+.monthly-analytics-table td:first-child {
+    text-align: left;
+}
+
+@media (max-width: 600px) {
+    .analytics-panel {
+        padding: 0 14px 15px;
+    }
+
+    .analytics-panel-heading {
+        align-items: flex-start;
+    }
+
+    .analytics-panel-heading strong {
+        font-size: 14px;
+    }
+
+    .monthly-analytics-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media print {
+    .topbar,
+    .sidebar,
+    .page-heading,
+    .overview-hero,
+    .statistics,
+    .dashboard-grid,
+    .analytics-toggle,
+    .monthly-analytics-toolbar button {
+        display: none !important;
+    }
+
+    .dashboard-layout {
+        display: block;
+    }
+
+    .main-content {
+        padding: 0;
+    }
+
+    .analytics-section {
+        gap: 12px;
+    }
+
+    .analytics-panel {
+        break-inside: avoid;
+        box-shadow: none;
+    }
+
+    .analytics-panel:not([open]) > :not(summary) {
+        display: block;
+    }
+
+    .table-container {
+        overflow: visible;
+    }
+
+    .analytics-table,
+    .analytics-wide-table,
+    .monthly-analytics-table {
+        min-width: 100%;
+    }
+
+    .analytics-table th,
+    .analytics-table td {
+        padding: 6px;
+        font-size: 9px;
+    }
+}

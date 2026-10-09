@@ -145,6 +145,34 @@ def calculate_sla(created_at, priority, status):
     }
 
 
+def parse_dashboard_datetime(value):
+    if isinstance(value, datetime):
+        return value
+
+    if not value:
+        return None
+
+    try:
+        return datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def format_duration(hours):
+    if hours is None:
+        return "—"
+
+    total_minutes = int(hours * 60)
+    days, remainder = divmod(total_minutes, 24 * 60)
+    hours, minutes = divmod(remainder, 60)
+
+    if days:
+        return f"{days}d {hours}h"
+    if hours:
+        return f"{hours}h {minutes}m"
+    return f"{minutes}m"
+
+
 def log_activity(ticket_id, user_id, action, details):
     conn = get_db()
 
@@ -313,31 +341,21 @@ def dashboard():
 
     conn = get_db()
 
-    total = conn.execute(
-        "SELECT COUNT(*) FROM tickets"
-    ).fetchone()[0]
+    ticket_rows = conn.execute("""
+        SELECT
+            tickets.*,
+            technician.full_name AS technician_name
+        FROM tickets
+        LEFT JOIN users technician ON tickets.assigned_to = technician.id
+        ORDER BY tickets.id DESC
+    """).fetchall()
 
-    open_tickets = conn.execute(
-        "SELECT COUNT(*) FROM tickets WHERE status = 'Open'"
-    ).fetchone()[0]
-
-    in_progress = conn.execute(
-        "SELECT COUNT(*) FROM tickets WHERE status = 'In Progress'"
-    ).fetchone()[0]
-
-    resolved = conn.execute(
-        "SELECT COUNT(*) FROM tickets WHERE status = 'Resolved'"
-    ).fetchone()[0]
-
-    technicians = conn.execute("""
-        SELECT COUNT(*) FROM users
-        WHERE role = 'ICT Technician'
-        AND active = 1
-    """).fetchone()[0]
-
-    departments = conn.execute(
-        "SELECT COUNT(*) FROM departments"
-    ).fetchone()[0]
+    status_events = conn.execute("""
+        SELECT ticket_id, details, created_at
+        FROM ticket_activity
+        WHERE action = 'Status Updated'
+        ORDER BY created_at, id
+    """).fetchall()
 
     recent_tickets = conn.execute("""
         SELECT
@@ -353,16 +371,212 @@ def dashboard():
 
     conn.close()
 
+    now = datetime.now()
+    terminal_statuses = {"Resolved", "Closed"}
+    active_statuses = {"Open", "Assigned", "In Progress", "Pending"}
+    priority_values = list(SLA_TARGETS)
+    for row in ticket_rows:
+        if row["priority"] not in priority_values:
+            priority_values.append(row["priority"])
+    priorities = tuple(priority_values)
+    resolution_times = {}
+
+    for event in status_events:
+        details = event["details"] or ""
+        new_status = details.rsplit(" to ", 1)[-1].rstrip(".")
+        if new_status in terminal_statuses:
+            event_time = parse_dashboard_datetime(event["created_at"])
+            if event_time:
+                resolution_times[event["ticket_id"]] = event_time
+
+    assignee_stats = {}
+    priority_stats = {
+        priority: {
+            "priority": priority,
+            "target_hours": SLA_TARGETS.get(priority, 24),
+            "total": 0,
+            "active": 0,
+            "overdue": 0,
+            "closed": 0,
+            "known_closures": 0,
+            "breached": 0,
+            "within_sla": 0
+        }
+        for priority in priorities
+    }
+    monthly_stats = {
+        month: {
+            priority: {"resolved": 0, "within_sla": 0}
+            for priority in priorities
+        }
+        for month in range(1, now.month + 1)
+    }
+    total = 0
+    open_tickets = 0
+    pending_tickets = 0
+    assigned_tickets = 0
+    in_progress = 0
+    resolved = 0
+    closed = 0
+
+    for row in ticket_rows:
+        ticket = dict(row)
+        total += 1
+        status = ticket["status"]
+        priority = ticket["priority"]
+        assignee = ticket["technician_name"] or "Unassigned"
+        target_hours = SLA_TARGETS.get(priority, 24)
+        created_at = parse_dashboard_datetime(ticket["created_at"])
+        is_terminal = status in terminal_statuses
+        completion_at = resolution_times.get(ticket["id"]) if is_terminal else None
+        resolution_hours = None
+        if created_at and completion_at:
+            resolution_hours = max(
+                0,
+                (completion_at - created_at).total_seconds() / 3600
+            )
+
+        age_hours = None
+        if created_at:
+            age_hours = max(0, (now - created_at).total_seconds() / 3600)
+        is_overdue = (
+            status in active_statuses
+            and age_hours is not None
+            and age_hours >= target_hours
+        )
+        is_breached = (
+            resolution_hours is not None
+            and resolution_hours > target_hours
+        )
+
+        if status == "Open":
+            open_tickets += 1
+        elif status == "Pending":
+            pending_tickets += 1
+        elif status == "Assigned":
+            assigned_tickets += 1
+        elif status == "In Progress":
+            in_progress += 1
+        elif status == "Resolved":
+            resolved += 1
+        elif status == "Closed":
+            closed += 1
+
+        assignee_stats.setdefault(assignee, {
+            "name": assignee,
+            "total": 0,
+            "active": 0,
+            "in_progress": 0,
+            "overdue": 0,
+            "closed": 0,
+            "known_closures": 0,
+            "breached": 0,
+            "resolution_hours": []
+        })
+        assignee_row = assignee_stats[assignee]
+        assignee_row["total"] += 1
+        if status in active_statuses:
+            assignee_row["active"] += 1
+        if status == "In Progress":
+            assignee_row["in_progress"] += 1
+        if is_overdue:
+            assignee_row["overdue"] += 1
+        if is_terminal:
+            assignee_row["closed"] += 1
+        if resolution_hours is not None:
+            assignee_row["known_closures"] += 1
+            assignee_row["resolution_hours"].append(resolution_hours)
+            if is_breached:
+                assignee_row["breached"] += 1
+
+        if priority not in priority_stats:
+            priority_stats[priority] = {
+                "priority": priority,
+                "target_hours": target_hours,
+                "total": 0,
+                "active": 0,
+                "overdue": 0,
+                "closed": 0,
+                "known_closures": 0,
+                "breached": 0,
+                "within_sla": 0
+            }
+        priority_row = priority_stats[priority]
+        priority_row["total"] += 1
+        if status in active_statuses:
+            priority_row["active"] += 1
+        if is_overdue:
+            priority_row["overdue"] += 1
+        if is_terminal:
+            priority_row["closed"] += 1
+        if resolution_hours is not None:
+            priority_row["known_closures"] += 1
+            if is_breached:
+                priority_row["breached"] += 1
+            else:
+                priority_row["within_sla"] += 1
+
+            if completion_at.year == now.year and completion_at.month in monthly_stats:
+                month_row = monthly_stats[completion_at.month][priority]
+                month_row["resolved"] += 1
+                if not is_breached:
+                    month_row["within_sla"] += 1
+
+    assignee_rows = []
+    for assignee_row in assignee_stats.values():
+        closures = assignee_row["known_closures"]
+        durations = assignee_row.pop("resolution_hours")
+        assignee_row["breach_rate"] = (
+            round(assignee_row["breached"] * 100 / closures)
+            if closures else None
+        )
+        assignee_row["avg_resolution"] = (
+            format_duration(sum(durations) / len(durations))
+            if durations else "—"
+        )
+        assignee_rows.append(assignee_row)
+    assignee_rows.sort(key=lambda item: (-item["total"], item["name"]))
+
+    priority_rows = []
+    for priority in priorities:
+        priority_row = priority_stats[priority]
+        closures = priority_row["known_closures"]
+        priority_row["compliance"] = (
+            round(priority_row["within_sla"] * 100 / closures)
+            if closures else None
+        )
+        priority_row["share"] = (
+            round(priority_row["total"] * 100 / total)
+            if total else 0
+        )
+        priority_rows.append(priority_row)
+
+    monthly_rows = [
+        {
+            "label": datetime(now.year, month, 1).strftime("%b"),
+            "metrics": monthly_stats[month]
+        }
+        for month in monthly_stats
+    ]
+
     return render_template(
         "dashboard.html",
         full_name=session["full_name"],
         role=session["role"],
         total=total,
         open_tickets=open_tickets,
+        pending_tickets=pending_tickets,
+        assigned_tickets=assigned_tickets,
         in_progress=in_progress,
         resolved=resolved,
-        technicians=technicians,
-        departments=departments,
+        closed=closed,
+        status_counts=status_counts,
+        assignee_rows=assignee_rows,
+        priority_rows=priority_rows,
+        monthly_rows=monthly_rows,
+        priority_order=priorities,
+        analytics_year=now.year,
+        dashboard_date=now.strftime("%d %b %Y"),
         recent_tickets=recent_tickets
     )
 

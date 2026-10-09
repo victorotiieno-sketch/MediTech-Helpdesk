@@ -76,44 +76,220 @@
             </div>
             <div class="info-badges">
                 <span>{{ role }}</span>
-                <span>{{ departments }} departments</span>
+                <span>{{ dashboard_date }}</span>
             </div>
         </section>
 
         <section class="statistics">
 
-            <div class="stat-card">
-                <div class="stat-icon">T</div>
-                <div>
-                    <span>Total Tickets</span>
-                    <strong>{{ total }}</strong>
-                </div>
+            <div class="stat-card analytics-stat">
+                <div class="stat-icon">TV</div>
+                <div><span>Total Volume</span><strong>{{ total }}</strong></div>
+            </div>
+            <div class="stat-card analytics-stat">
+                <div class="stat-icon stat-icon-warning">PR</div>
+                <div><span>Pending Review</span><strong>{{ open_tickets + pending_tickets }}</strong></div>
+            </div>
+            <div class="stat-card analytics-stat">
+                <div class="stat-icon stat-icon-live">AL</div>
+                <div><span>Assigned Live</span><strong>{{ assigned_tickets + in_progress }}</strong></div>
+            </div>
+            <div class="stat-card analytics-stat">
+                <div class="stat-icon stat-icon-success">RC</div>
+                <div><span>Resolved / Closed</span><strong>{{ resolved + closed }}</strong></div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon">O</div>
-                <div>
-                    <span>Open Tickets</span>
-                    <strong>{{ open_tickets }}</strong>
-                </div>
-            </div>
+        </section>
 
-            <div class="stat-card">
-                <div class="stat-icon">P</div>
-                <div>
-                    <span>In Progress</span>
-                    <strong>{{ in_progress }}</strong>
+        <section class="analytics-section" aria-label="Dashboard analytics">
+            <details class="analytics-panel" open>
+                <summary class="analytics-panel-heading">
+                    <span>
+                        <strong>Summary Performance Analytics</strong>
+                        <small>Ticket workload and status by assignee</small>
+                    </span>
+                    <span class="analytics-toggle">Hide</span>
+                </summary>
+                <div class="table-container">
+                    <table class="analytics-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Ticket Assignee</th>
+                                <th>Active</th>
+                                <th>In Progress</th>
+                                <th>Overdue</th>
+                                <th>Closed</th>
+                                <th>Aggregate Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignee in assignee_rows %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><strong>{{ assignee.name }}</strong></td>
+                                <td>{{ assignee.active }}</td>
+                                <td>{{ assignee.in_progress }}</td>
+                                <td><span class="analytics-number {% if assignee.overdue %}is-overdue{% endif %}">{{ assignee.overdue }}</span></td>
+                                <td>{{ assignee.closed }}</td>
+                                <td><strong>{{ assignee.total }}</strong></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="analytics-empty">No ticket activity yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            </details>
 
-            <div class="stat-card">
-                <div class="stat-icon">R</div>
-                <div>
-                    <span>Resolved</span>
-                    <strong>{{ resolved }}</strong>
+            <details class="analytics-panel" open>
+                <summary class="analytics-panel-heading">
+                    <span>
+                        <strong>Summary SLA Breach Rate Analytics</strong>
+                        <small>Overdue active work and recorded resolution times by assignee</small>
+                    </span>
+                    <span class="analytics-toggle">Hide</span>
+                </summary>
+                <div class="table-container">
+                    <table class="analytics-table analytics-wide-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Ticket Assignee</th>
+                                <th>Tickets</th>
+                                <th>In Progress</th>
+                                <th>Closed</th>
+                                <th>Overdue</th>
+                                <th>SLA Breached</th>
+                                <th>Breach Rate</th>
+                                <th>Avg. Resolution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignee in assignee_rows %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><strong>{{ assignee.name }}</strong></td>
+                                <td>{{ assignee.total }}</td>
+                                <td>{{ assignee.in_progress }}</td>
+                                <td>{{ assignee.closed }}</td>
+                                <td><span class="analytics-number {% if assignee.overdue %}is-overdue{% endif %}">{{ assignee.overdue }}</span></td>
+                                <td>{{ assignee.breached }}</td>
+                                <td>
+                                    {% if assignee.breach_rate is not none %}
+                                        <span class="analytics-number {% if assignee.breach_rate >= 30 %}is-overdue{% endif %}">{{ assignee.breach_rate }}%</span>
+                                        <small class="analytics-denominator">of {{ assignee.known_closures }} tracked</small>
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td>{{ assignee.avg_resolution }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="9" class="analytics-empty">No assigned tickets yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+                <p class="analytics-note">Breach rate and average resolution use only tickets with a recorded status-change timestamp for resolution. Overdue counts reflect currently active tickets.</p>
+            </details>
 
+            <details class="analytics-panel" open>
+                <summary class="analytics-panel-heading">
+                    <span>
+                        <strong>SLA Performance Analytics</strong>
+                        <small>Current ticket mix and service-level compliance by priority</small>
+                    </span>
+                    <span class="analytics-toggle">Hide</span>
+                </summary>
+                <div class="table-container">
+                    <table class="analytics-table analytics-wide-table">
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>SLA Target</th>
+                                <th>Active Open</th>
+                                <th>Overdue Alert</th>
+                                <th>Concluded</th>
+                                <th>SLA Breached</th>
+                                <th>Within SLA</th>
+                                <th>Volume Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in priority_rows %}
+                            <tr>
+                                <td><span class="badge priority-{{ item.priority|lower }}">{{ item.priority }}</span></td>
+                                <td>{{ item.target_hours }} hours</td>
+                                <td>{{ item.active }}</td>
+                                <td><span class="analytics-number {% if item.overdue %}is-overdue{% endif %}">{{ item.overdue }}</span></td>
+                                <td>{{ item.closed }}</td>
+                                <td>{{ item.breached }}</td>
+                                <td>
+                                    {% if item.compliance is not none %}
+                                        {{ item.compliance }}%
+                                        <small class="analytics-denominator">{{ item.within_sla }} / {{ item.known_closures }} tracked</small>
+                                    {% else %}No history{% endif %}
+                                </td>
+                                <td>
+                                    <span class="analytics-share">
+                                        <span class="analytics-share-bar"><span style="width: {{ item.share }}%"></span></span>
+                                        <strong>{{ item.share }}%</strong>
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="analytics-note">SLA targets follow MediTech’s configured limits: Critical 4h, High 8h, Medium 24h, Low 72h. Resolution compliance uses recorded resolution transitions only.</p>
+            </details>
+
+            <details class="analytics-panel" open>
+                <summary class="analytics-panel-heading">
+                    <span>
+                        <strong>Monthly SLA Performance Analytics</strong>
+                        <small>Recorded resolutions and within-SLA rate by month in {{ analytics_year }}</small>
+                    </span>
+                    <span class="analytics-toggle">Hide</span>
+                </summary>
+                <div class="monthly-analytics-toolbar">
+                    <span>Jan 1 – {{ dashboard_date }}</span>
+                    <button class="secondary-button" type="button" onclick="window.print()">Print Analytics</button>
+                </div>
+                <div class="table-container">
+                    <table class="analytics-table monthly-analytics-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                {% for priority in priority_order %}
+                                <th>{{ priority }}<small>{{ priority_rows[loop.index0].target_hours }}h SLA</small></th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in monthly_rows %}
+                            <tr>
+                                <td><strong>{{ month.label }}</strong></td>
+                                {% for priority in priority_order %}
+                                    {% set metric = month.metrics[priority] %}
+                                    <td>
+                                        {% if metric.resolved %}
+                                            <strong>{{ metric.within_sla }}/{{ metric.resolved }}</strong>
+                                            <small class="analytics-denominator">{{ (metric.within_sla * 100 / metric.resolved)|round|int }}% within SLA</small>
+                                        {% else %}
+                                            <span class="analytics-no-data">—</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                            {% if not monthly_rows %}
+                            <tr><td colspan="{{ priority_order|length + 1 }}" class="analytics-empty">No resolution history recorded for this year.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="analytics-note">Each cell shows resolutions completed within SLA / resolutions with recorded completion time. Tickets without a status-change history are excluded.</p>
+            </details>
         </section>
 
         <section class="dashboard-grid">
