@@ -35,8 +35,8 @@
     <aside class="sidebar">
         <nav>
             <a href="{{ url_for('dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
-            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            {% include "partials/ticket_navigation.html" %}
+
             <a href="{{ url_for('systems_directory') }}">Systems Directory</a>
             <a href="{{ url_for('assets') }}" {% if request.endpoint in ['assets', 'create_asset', 'asset_details', 'edit_asset', 'update_asset_status'] %}class="active"{% endif %}>Asset Manager</a>
 

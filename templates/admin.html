@@ -44,13 +44,7 @@
                 Dashboard
             </a>
 
-            <a href="{{ url_for('create_ticket') }}">
-                Create Ticket
-            </a>
-
-            <a href="{{ url_for('tickets') }}">
-                View Tickets
-            </a>
+            {% include "partials/ticket_navigation.html" %}
 
             <a href="{{ url_for('admin_panel') }}" class="active">
                 Administration

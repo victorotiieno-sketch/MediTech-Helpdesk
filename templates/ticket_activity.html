@@ -61,15 +61,7 @@
                     Dashboard
                 </a>
 
-                <a href="{{ url_for('tickets') }}">
-                    <span class="nav-icon">?</span>
-                    All Tickets
-                </a>
-
-                <a href="{{ url_for('create_ticket') }}">
-                    <span class="nav-icon">+</span>
-                    Create Ticket
-                </a>
+            {% include "partials/ticket_navigation.html" %}
 
             </nav>
 

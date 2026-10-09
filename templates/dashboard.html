@@ -36,8 +36,8 @@
 
         <nav>
             <a href="{{ url_for('dashboard') }}" class="active">Dashboard</a>
-            <a href="{{ url_for('create_ticket') }}">Create Ticket</a>
-            <a href="{{ url_for('tickets') }}">View Tickets</a>
+            {% include "partials/ticket_navigation.html" %}
+
             <a href="{{ url_for('assets') }}">Asset Manager</a>
             <a href="{{ url_for('notifications') }}">Notifications</a>
             {% if role == 'Administrator' %}
