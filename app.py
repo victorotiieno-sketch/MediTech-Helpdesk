@@ -587,7 +587,7 @@ def systems_directory():
         {
             "name": "Access Request System",
             "description": "Submit and track access requests.",
-            "url": "http://172.20.0.42:8016/",
+            "url": None,
             "category": "Operations"
         },
         {
@@ -599,13 +599,13 @@ def systems_directory():
         {
             "name": "Backup Log Tracker",
             "description": "Review backup activity and logs.",
-            "url": "http://172.20.0.42:8004/",
+            "url": None,
             "category": "Operations"
         },
         {
             "name": "Biomed Helpdesk",
             "description": "Open the biomedical equipment support system.",
-            "url": "http://172.20.0.42:8009/",
+            "url": None,
             "category": "Support"
         },
         {
@@ -629,7 +629,7 @@ def systems_directory():
         {
             "name": "Contract Management System",
             "description": "Manage hospital contracts and agreements.",
-            "url": "http://172.20.0.42:8008/",
+            "url": None,
             "category": "Operations"
         },
         {
