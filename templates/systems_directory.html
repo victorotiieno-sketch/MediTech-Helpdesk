@@ -16,15 +16,29 @@
 
 <div class="systems-directory-grid" id="systems-grid">
     {% for system in systems %}
+    {% if system['url'] %}
     <a class="system-link-card" href="{{ system['url'] }}" target="_blank" rel="noopener noreferrer" data-search="{{ system['name'] }} {{ system['category'] }} {{ system['description'] }}">
+    {% else %}
+    <div class="system-link-card system-link-card-disabled" aria-disabled="true" data-search="{{ system['name'] }} {{ system['category'] }} {{ system['description'] }}">
+    {% endif %}
         <div class="system-link-card-topline">
             <span class="system-category">{{ system['category'] }}</span>
+            {% if system['url'] %}
             <span class="system-open-icon" aria-hidden="true">&rarr;</span>
+            {% endif %}
         </div>
         <h2>{{ system['name'] }}</h2>
         <p>{{ system['description'] }}</p>
+        {% if system['url'] %}
         <span class="system-link-url">Open system</span>
+        {% else %}
+        <span class="system-link-url">Link disabled — confirm destination</span>
+        {% endif %}
+    {% if system['url'] %}
     </a>
+    {% else %}
+    </div>
+    {% endif %}
     {% endfor %}
 </div>
 

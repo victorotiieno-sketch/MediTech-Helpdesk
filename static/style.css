@@ -3771,6 +3771,10 @@ textarea,
     transform: translateY(-2px);
 }
 
+.system-link-card-disabled {
+    cursor: not-allowed;
+}
+
 .system-link-card-topline {
     display: flex;
     align-items: center;

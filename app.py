@@ -593,7 +593,7 @@ def systems_directory():
         {
             "name": "AGFA",
             "description": "Access the AGFA clinical imaging system.",
-            "url": "https://eisrv01ws.ea.aku.edu/?theme=theme",
+            "url": None,
             "category": "Clinical Systems"
         },
         {
@@ -611,19 +611,19 @@ def systems_directory():
         {
             "name": "Care Password Reset",
             "description": "Reset Care system credentials.",
-            "url": "https://apps.akhskenya.org:9011/generic/care-password-reset",
+            "url": None,
             "category": "Support"
         },
         {
             "name": "Care Web",
             "description": "Open the Care web application.",
-            "url": "https://careweb-05.akhskenya.org:4440/?hostname=",
+            "url": None,
             "category": "Clinical Systems"
         },
         {
             "name": "Consentra",
             "description": "Access consent management services.",
-            "url": "https://apps.akhskenya.org:9023/",
+            "url": None,
             "category": "Clinical Systems"
         },
         {
@@ -635,13 +635,13 @@ def systems_directory():
         {
             "name": "CPOE",
             "description": "Open computerized provider order entry.",
-            "url": "https://cpoe.akhskenya.org/poe/",
+            "url": None,
             "category": "Clinical Systems"
         },
         {
             "name": "Credentialing and Privileging",
             "description": "Manage provider credentialing workflows.",
-            "url": "https://akhkcnp.com/pages/login.php",
+            "url": None,
             "category": "Operations"
         }
     ]
